@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AutoApply Connection</title>
+    <style>
+        body { width: 300px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 15px; margin: 0; color: #333; }
+        h2 { margin-top: 0; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 13px; }
+        input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #4f46e5; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        button:hover { background-color: #4338ca; }
+        .status { margin-top: 15px; font-size: 13px; padding: 10px; border-radius: 4px; display: none; }
+        .status.success { background-color: #d1fae5; color: #065f46; display: block; }
+        .status.error { background-color: #fee2e2; color: #991b1b; display: block; }
+        .toggle-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #4f46e5; }
+        input:checked + .slider:before { transform: translateX(20px); }
+    </style>
+</head>
+<body>
+    <h2>AutoApply Connection</h2>
+    
+    <div class="form-group">
+        <label for="apiUrl">Laravel API URL</label>
+        <input type="text" id="apiUrl" placeholder="http://127.0.0.1:8000" value="http://127.0.0.1:8000">
+    </div>
+    
+    <div class="form-group">
+        <label for="apiToken">API Token (Sanctum)</label>
+        <input type="text" id="apiToken" placeholder="Enter your token...">
+    </div>
+    
+    <div class="toggle-container">
+        <label for="autoApplyToggle" style="margin-bottom:0;">Enable Auto-Apply</label>
+        <label class="switch">
+            <input type="checkbox" id="autoApplyToggle" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <button id="saveBtn">Save Settings</button>
+    
+    <div id="statusMsg" class="status"></div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

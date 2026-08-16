@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "AutoApply - Job Automation System",
+  "version": "1.0",
+  "description": "Extracts jobs from job boards and sends them to your local Job Automation backend.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*",
+    "https://*.linkedin.com/*",
+    "https://*.naukri.com/*",
+    "https://*.uplers.com/*",
+    "https://*.unstop.com/*",
+    "https://*.hirist.tech/*",
+    "https://*.cutshort.io/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.linkedin.com/jobs/*",
+        "https://*.naukri.com/*",
+        "https://*.uplers.com/*",
+        "https://*.unstop.com/*",
+        "https://*.hirist.tech/*",
+        "https://*.cutshort.io/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}
