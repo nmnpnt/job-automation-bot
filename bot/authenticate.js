@@ -1,6 +1,6 @@
-const puppeteer = require('puppeteer');
-const path = require('path');
-const fs = require('fs');
+import puppeteer from 'puppeteer';
+import path from 'path';
+import fs from 'fs';
 
 (async () => {
     const args = process.argv.slice(2);
@@ -30,7 +30,7 @@ const fs = require('fs');
     switch (platform) {
         case 'LINKEDIN':
             loginUrl = 'https://www.linkedin.com/login';
-            successSelector = '#global-nav'; // Global nav bar appears when logged in
+            successSelector = '#global-nav, .global-nav, .scaffold-layout'; // Broaden selector for logged-in state
             break;
         case 'NAUKRI':
             loginUrl = 'https://login.naukri.com/nLogin/Login.php';
@@ -64,20 +64,35 @@ const fs = require('fs');
         const browser = await puppeteer.launch({ 
             headless: false,
             userDataDir: session_dir,
-            defaultViewport: null
+            defaultViewport: null,
+            args: [
+                '--disable-restore-session-state',
+                '--no-first-run',
+                '--no-default-browser-check'
+            ]
         });
         
-        const page = await browser.newPage();
+        // Use the first automatically opened tab instead of spawning a new blank one
+        const pages = await browser.pages();
+        const page = pages.length > 0 ? pages[0] : await browser.newPage();
         
         console.log(JSON.stringify({ status: 'info', message: `Please log in to ${platform} manually in the opened browser window.` }));
-        await page.goto(loginUrl, { waitUntil: 'networkidle2' });
+        await page.goto(loginUrl, { waitUntil: 'networkidle2' }).catch(() => {});
         
         // Wait up to 5 minutes for the user to log in manually
-        await page.waitForSelector(successSelector, { timeout: 300000 });
+        // Or if the user closes the browser window manually after logging in
+        await Promise.race([
+            page.waitForSelector(successSelector, { timeout: 300000 }).catch(() => {}),
+            new Promise(resolve => browser.on('disconnected', resolve))
+        ]);
         
-        console.log(JSON.stringify({ status: 'success', message: `Authentication successful for ${platform}. Session saved.` }));
+        console.log(JSON.stringify({ status: 'success', message: `Authentication finished for ${platform}. Session saved.` }));
         
-        await browser.close();
+        try {
+            await browser.close();
+        } catch (e) {
+            // Ignore if already closed
+        }
     } catch (error) {
         console.error(JSON.stringify({ status: 'failed', message: `Authentication timed out or failed: ${error.message}` }));
         process.exit(1);

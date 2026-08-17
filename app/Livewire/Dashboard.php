@@ -12,10 +12,12 @@ class Dashboard extends Component
     public $interviews = 0;
     public $platformStats = [];
     public $statusStats = [];
+    public $profile;
 
     public function mount()
     {
         $userId = auth()->id();
+        $this->profile = \App\Models\Profile::where('user_id', $userId)->first();
 
         // 1. Total Jobs Discovered
         $this->totalJobs = \App\Models\Application::where('user_id', $userId)->count();
@@ -42,7 +44,9 @@ class Dashboard extends Component
             ->groupBy('application_source')
             ->get();
             
-        $this->platformStats = $platforms->pluck('total', 'application_source')->toArray();
+        $this->platformStats = $platforms->mapWithKeys(function ($item) {
+            return [$item->application_source->value => $item->total];
+        })->toArray();
         
         // 6. Overall Status Breakdown
         $statuses = \App\Models\Application::where('user_id', $userId)
@@ -50,11 +54,24 @@ class Dashboard extends Component
             ->groupBy('status')
             ->get();
             
-        $this->statusStats = $statuses->pluck('total', 'status')->toArray();
+        $this->statusStats = $statuses->mapWithKeys(function ($item) {
+            return [$item->status->value => $item->total];
+        })->toArray();
+    }
+
+    public function startScraping()
+    {
+        if ($this->profile && $this->profile->scraping_status !== 'running') {
+            $this->profile->update(['scraping_status' => 'running']);
+            \App\Jobs\RunScraperJob::dispatch($this->profile->id);
+        }
     }
 
     public function render()
     {
+        if ($this->profile) {
+            $this->profile->refresh();
+        }
         return view('livewire.dashboard');
     }
 }

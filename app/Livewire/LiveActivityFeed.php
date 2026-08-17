@@ -25,7 +25,7 @@ class LiveActivityFeed extends Component
         ->toArray();
     }
 
-    #[On('echo:activity-feed,ActivityLogged')]
+    #[On('echo:activity-feed,.ActivityLogged')]
     public function handleNewActivity($event)
     {
         // Add new activity to the top and keep only the latest 10
@@ -36,18 +36,22 @@ class LiveActivityFeed extends Component
         ));
         
         $this->activities = array_slice($this->activities, 0, 10);
+        
+        $jobTitle = is_object($event['application']) ? $event['application']->job_title : ($event['application']['job_title'] ?? 'Job');
+        $this->dispatch('activity-logged', message: $event['message'], title: 'Update: ' . $jobTitle);
     }
 
     private function formatActivity($app, $status, $message)
     {
         return [
-            'id' => is_object($app) ? $app->id : $app['id'],
-            'job_title' => is_object($app) ? $app->job_title : $app['job_title'],
-            'company_name' => is_object($app) ? $app->company_name : $app['company_name'],
+            'id' => data_get($app, 'id'),
+            'job_title' => data_get($app, 'job_title'),
+            'company_name' => data_get($app, 'company_name'),
             'status' => $status,
             'message' => $message,
-            'timestamp' => now()->diffForHumans(),
-            'error_screenshot_path' => is_object($app) ? $app->error_screenshot_path : ($app['error_screenshot_path'] ?? null),
+            'timestamp' => data_get($app, 'updated_at', now()),
+            'error_screenshot_path' => data_get($app, 'error_screenshot_path'),
+            'original_job_url' => data_get($app, 'original_job_url'),
         ];
     }
 

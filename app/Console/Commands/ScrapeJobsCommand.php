@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Events\ActivityLogged;
 
 class ScrapeJobsCommand extends Command
 {
@@ -40,7 +41,7 @@ class ScrapeJobsCommand extends Command
             return;
         }
 
-        $platforms = $platformArg ? [strtoupper($platformArg)] : ['LINKEDIN', 'NAUKRI', 'UPLERS', 'UNSTOP', 'HIRIST', 'CUTSHORT'];
+        $platforms = $platformArg ? [strtoupper($platformArg)] : ['LINKEDIN', 'INDEED', 'NAUKRI', 'UPLERS', 'UNSTOP', 'HIRIST', 'CUTSHORT'];
 
         foreach ($profiles as $profile) {
             $this->info("Processing User ID: {$profile->user_id}");
@@ -48,7 +49,8 @@ class ScrapeJobsCommand extends Command
             $prefs = [
                 'target_roles' => $profile->target_roles,
                 'target_locations' => $profile->target_locations,
-                'remote_only' => $profile->remote_only,
+                'remote_preference' => $profile->remote_preference,
+                'max_job_age_days' => $profile->max_job_age_days,
             ];
 
             foreach ($platforms as $platform) {
@@ -73,6 +75,9 @@ class ScrapeJobsCommand extends Command
                 
                 try {
                     $process->mustRun();
+                    if ($process->getErrorOutput()) {
+                        $this->warn("Debug: " . $process->getErrorOutput());
+                    }
                     $output = $process->getOutput();
                     
                     // Parse output and save to database
@@ -80,7 +85,7 @@ class ScrapeJobsCommand extends Command
                     if (isset($result['status']) && $result['status'] === 'success' && isset($result['jobs'])) {
                         $this->info("Found " . count($result['jobs']) . " jobs.");
                         foreach ($result['jobs'] as $jobData) {
-                            \App\Models\Application::updateOrCreate(
+                            $app = \App\Models\Application::updateOrCreate(
                                 [
                                     'original_job_url' => $jobData['url'],
                                     'user_id' => $profile->user_id,
@@ -94,6 +99,14 @@ class ScrapeJobsCommand extends Command
                                     'can_auto_apply' => true
                                 ]
                             );
+                            if ($app->wasRecentlyCreated) {
+                                event(new ActivityLogged($app, 'DISCOVERED', "New job discovered: {$jobData['title']} at {$jobData['company']} via {$platform}."));
+                                $profile->user->sendSlackNotification(
+                                    "New job discovered: {$jobData['title']} at {$jobData['company']} via {$platform}.",
+                                    'info',
+                                    'notify_on_external' // We can use notify_on_external for discovered jobs as a close match, or daily_summary
+                                );
+                            }
                         }
                     } else {
                         $this->error("Failed to parse jobs: " . $output);

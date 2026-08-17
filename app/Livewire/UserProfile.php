@@ -21,14 +21,16 @@ class UserProfile extends Component
     public $resume_path;
     public $resume;
     public $target_roles;
-    public $target_locations;
-    public $remote_only = false;
+    public $target_locations = '';
+    public $remote_preference = 'include';
+    public $max_job_age_days = 7;
     
     public $saved = false;
+    public $api_token;
 
     public function mount()
     {
-        $profile = Profile::where('user_id', auth()->id())->first();
+        $profile = auth()->user()->profile;
         if ($profile) {
             $this->first_name = $profile->first_name;
             $this->last_name = $profile->last_name;
@@ -40,24 +42,29 @@ class UserProfile extends Component
             $this->resume_path = $profile->resume_path;
             $this->target_roles = $profile->target_roles;
             $this->target_locations = $profile->target_locations;
-            $this->remote_only = (bool)$profile->remote_only;
+            $this->remote_preference = $profile->remote_preference ?? 'include';
+            $this->max_job_age_days = $profile->max_job_age_days ?? 7;
         }
     }
 
     public function save()
     {
         $this->validate([
-            'first_name' => 'required|string',
-            'last_name' => 'required|string',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'email' => 'required|email',
-            'portfolio_url' => 'nullable|url',
-            'resume' => 'nullable|mimes:pdf|max:5120',
-            'target_roles' => 'nullable|string|max:255',
-            'target_locations' => 'nullable|string|max:255',
-            'remote_only' => 'boolean',
+            'phone' => 'nullable|string|max:20',
+            'linkedin_url' => 'nullable|url|max:255',
+            'github_url' => 'nullable|url|max:255',
+            'portfolio_url' => 'nullable|url|max:255',
+            'resume' => 'nullable|file|mimes:pdf|max:2048',
+            'target_roles' => 'nullable|string',
+            'target_locations' => 'nullable|string',
+            'remote_preference' => 'required|in:none,include,only',
+            'max_job_age_days' => 'required|integer|min:1|max:30',
         ]);
 
-        $profile = Profile::firstOrNew(['user_id' => auth()->id()]);
+        $profile = auth()->user()->profile ?? new \App\Models\Profile(['user_id' => auth()->id()]);
         
         $profile->first_name = $this->first_name;
         $profile->last_name = $this->last_name;
@@ -68,7 +75,8 @@ class UserProfile extends Component
         $profile->portfolio_url = $this->portfolio_url;
         $profile->target_roles = $this->target_roles;
         $profile->target_locations = $this->target_locations;
-        $profile->remote_only = $this->remote_only;
+        $profile->remote_preference = $this->remote_preference;
+        $profile->max_job_age_days = $this->max_job_age_days;
 
         if ($this->resume) {
             $path = $this->resume->store('resumes', 'public');
@@ -118,6 +126,19 @@ class UserProfile extends Component
         } catch (\Exception $e) {
             session()->flash('error', "Failed to launch authentication window: " . $e->getMessage());
         }
+    }
+
+    public function generateApiToken()
+    {
+        $user = auth()->user();
+        
+        // Revoke older tokens with the same name if needed
+        $user->tokens()->where('name', 'chrome-extension')->delete();
+        
+        $token = $user->createToken('chrome-extension')->plainTextToken;
+        $this->api_token = $token;
+        
+        session()->flash('token_message', 'New API Token generated successfully. Please copy it now, it will not be shown again.');
     }
 
     public function render()

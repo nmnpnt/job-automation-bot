@@ -51,10 +51,22 @@ class PuppeteerOrchestrator
             $output = $process->getOutput();
             
             // Output might have other logs, so parse the last line as JSON, or find JSON
-            preg_match('/{.*}/s', $output, $matches);
+            $lines = explode("\n", trim($output));
+            $result = null;
             
-            if (!empty($matches)) {
-                $result = json_decode($matches[0], true);
+            // Search backwards for the last valid JSON line
+            for ($i = count($lines) - 1; $i >= 0; $i--) {
+                $line = trim($lines[$i]);
+                if (empty($line)) continue;
+                
+                $parsed = json_decode($line, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($parsed) && isset($parsed['status'])) {
+                    $result = $parsed;
+                    break;
+                }
+            }
+            
+            if ($result) {
                 if (isset($result['status']) && $result['status'] === 'success') {
                     Log::info('Puppeteer success: ' . $result['message']);
                     return true;
@@ -77,9 +89,21 @@ class PuppeteerOrchestrator
             Log::error('Puppeteer process failed: ' . $e->getMessage());
             
             $output = $e->getProcess()->getErrorOutput() . "\n" . $e->getProcess()->getOutput();
-            preg_match('/{.*}/s', $output, $matches);
-            if (!empty($matches)) {
-                $result = json_decode($matches[0], true);
+            $lines = explode("\n", trim($output));
+            $result = null;
+            
+            for ($i = count($lines) - 1; $i >= 0; $i--) {
+                $line = trim($lines[$i]);
+                if (empty($line)) continue;
+                
+                $parsed = json_decode($line, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($parsed) && isset($parsed['status'])) {
+                    $result = $parsed;
+                    break;
+                }
+            }
+
+            if ($result) {
                 if (isset($result['screenshot_path'])) {
                     $application->update(['error_screenshot_path' => $result['screenshot_path']]);
                 }

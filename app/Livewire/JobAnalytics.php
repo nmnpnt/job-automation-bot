@@ -36,12 +36,20 @@ class JobAnalytics extends Component
         // Fill missing days
         $dates = [];
         $applicationsPerDay = [];
+        $thisWeekApplications = 0;
         for ($i = 6; $i >= 0; $i--) {
             $dateStr = now()->subDays($i)->format('Y-m-d');
             $dates[] = $dateStr;
             $match = $dailyCounts->firstWhere('date', $dateStr);
-            $applicationsPerDay[] = $match ? $match->total : 0;
+            $total = $match ? $match->total : 0;
+            $applicationsPerDay[] = $total;
+            $thisWeekApplications += $total;
         }
+
+        // Quick Stats
+        $totalApplications = Application::count();
+        $interviews = Application::whereIn('status', ['INTERVIEW_REQUESTED', 'OFFER_RECEIVED'])->count();
+        $interviewRate = $totalApplications > 0 ? round(($interviews / $totalApplications) * 100, 1) : 0;
 
         return view('livewire.job-analytics', [
             'statusLabels' => json_encode($statusLabels),
@@ -50,6 +58,9 @@ class JobAnalytics extends Component
             'sourceData' => json_encode($sourceData),
             'trendDates' => json_encode($dates),
             'trendData' => json_encode($applicationsPerDay),
+            'totalApplications' => $totalApplications,
+            'thisWeekApplications' => $thisWeekApplications,
+            'interviewRate' => $interviewRate,
         ]);
     }
 }

@@ -58,6 +58,11 @@ class ExtensionController extends Controller
                 'message' => 'Job discovered via Chrome Extension while browsing.',
             ]);
             
+            $request->user()->notify(new \App\Notifications\SystemSlackNotification(
+                "New job discovered via Chrome Extension: {$application->job_title} at {$application->company_name}",
+                'success'
+            ));
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Job successfully synced!',

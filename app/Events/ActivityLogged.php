@@ -5,11 +5,11 @@ namespace App\Events;
 use App\Models\Application;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class ActivityLogged implements ShouldBroadcast
+class ActivityLogged implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -24,5 +24,10 @@ class ActivityLogged implements ShouldBroadcast
         return [
             new Channel('activity-feed'),
         ];
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'ActivityLogged';
     }
 }

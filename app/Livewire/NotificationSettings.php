@@ -7,47 +7,58 @@ use App\Models\NotificationPreference;
 
 class NotificationSettings extends Component
 {
-    public $preference;
+    public $notify_on_submitted;
+    public $notify_on_external;
+    public $notify_on_company_website;
+    public $notify_on_failed;
+    public $notify_on_manual_required;
+    public $notify_on_duplicate;
 
-    protected $rules = [
-        'preference.notify_on_submitted' => 'boolean',
-        'preference.notify_on_external' => 'boolean',
-        'preference.notify_on_company_website' => 'boolean',
-        'preference.notify_on_failed' => 'boolean',
-        'preference.notify_on_manual_required' => 'boolean',
-        'preference.notify_on_duplicate' => 'boolean',
-        'preference.daily_summary' => 'boolean',
-        'preference.channel_in_app' => 'boolean',
-        'preference.channel_email' => 'boolean',
-    ];
+    public $channel_in_app;
+    public $channel_slack;
+    public $slack_webhook_url;
+
+    public $saved = false;
 
     public function mount()
     {
-        // Get or create for current user (assuming user ID 1 for now, or auth()->id() if logged in)
-        $userId = auth()->id() ?? 1;
-        
-        $this->preference = NotificationPreference::firstOrCreate(
-            ['user_id' => $userId],
-            [
-                'notify_on_submitted' => true,
-                'notify_on_external' => true,
-                'notify_on_company_website' => true,
-                'notify_on_failed' => true,
-                'notify_on_manual_required' => true,
-                'notify_on_duplicate' => false,
-                'daily_summary' => true,
-                'channel_in_app' => true,
-                'channel_email' => true,
-            ]
+        $prefs = NotificationPreference::firstOrCreate(
+            ['user_id' => auth()->id()]
         );
+
+        $this->notify_on_submitted = $prefs->notify_on_submitted;
+        $this->notify_on_external = $prefs->notify_on_external;
+        $this->notify_on_company_website = $prefs->notify_on_company_website;
+        $this->notify_on_failed = $prefs->notify_on_failed;
+        $this->notify_on_manual_required = $prefs->notify_on_manual_required;
+        $this->notify_on_duplicate = $prefs->notify_on_duplicate;
+
+        $this->channel_in_app = $prefs->channel_in_app;
+        $this->channel_slack = $prefs->channel_slack;
+        $this->slack_webhook_url = $prefs->slack_webhook_url;
     }
 
-    public function updated($propertyName)
+    public function save()
     {
-        $this->validateOnly($propertyName);
-        $this->preference->save();
+        $this->validate([
+            'slack_webhook_url' => 'nullable|url',
+        ]);
+
+        $prefs = NotificationPreference::where('user_id', auth()->id())->first();
         
-        session()->flash('message', 'Settings saved successfully.');
+        $prefs->update([
+            'notify_on_submitted' => $this->notify_on_submitted,
+            'notify_on_external' => $this->notify_on_external,
+            'notify_on_company_website' => $this->notify_on_company_website,
+            'notify_on_failed' => $this->notify_on_failed,
+            'notify_on_manual_required' => $this->notify_on_manual_required,
+            'notify_on_duplicate' => $this->notify_on_duplicate,
+            'channel_in_app' => $this->channel_in_app,
+            'channel_slack' => $this->channel_slack,
+            'slack_webhook_url' => $this->slack_webhook_url,
+        ]);
+
+        $this->saved = true;
     }
 
     public function render()

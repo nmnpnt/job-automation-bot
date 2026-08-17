@@ -46,6 +46,11 @@ class SimulateActivity extends Command
 
         // Dispatch the event
         event(new ActivityLogged($app, $randomStatus->value, $message));
+        
+        $app->user->sendSlackNotification(
+            "Simulated activity: {$message} for {$app->company_name}",
+            'info'
+        );
 
         $this->info("Simulated activity: {$message} for {$app->company_name}");
     }

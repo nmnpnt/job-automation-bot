@@ -11,6 +11,7 @@
         "laravel/framework": "^13.17",
         "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",
+        "laravel/slack-notification-channel": "^3.10",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^3.6.4",
         "livewire/volt": "^1.7.0",

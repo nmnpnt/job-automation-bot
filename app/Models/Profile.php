@@ -19,7 +19,10 @@ class Profile extends Model
         'resume_text',
         'target_roles',
         'target_locations',
-        'remote_only',
+        'remote_preference',
+        'max_job_age_days',
+        'scraping_status',
+        'last_scraped_at',
     ];
 
     public function user()

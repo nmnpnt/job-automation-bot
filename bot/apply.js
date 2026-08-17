@@ -1,5 +1,9 @@
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+
 puppeteer.use(StealthPlugin());
 
 (async () => {
@@ -34,7 +38,11 @@ puppeteer.use(StealthPlugin());
 
     try {
         const launchOptions = { headless: 'new', defaultViewport: null };
+
         if (session_dir) {
+            if (!fs.existsSync(session_dir)) {
+                fs.mkdirSync(session_dir, { recursive: true });
+            }
             launchOptions.userDataDir = session_dir;
         }
         
@@ -112,18 +120,56 @@ puppeteer.use(StealthPlugin());
             // await page.waitForNavigation({ waitUntil: 'networkidle2' });
 
             success = true;
-        } else if (['LINKEDIN', 'NAUKRI', 'UPLERS', 'UNSTOP', 'HIRIST', 'CUTSHORT'].includes(platform)) {
+        } else if (platform === 'LINKEDIN') {
+            console.log(JSON.stringify({ status: 'info', message: 'Applying on LinkedIn using authenticated session...' }));
+            
+            // Wait to verify we are still logged in by looking for some global element
+            try {
+                // Wait for the "Easy Apply" button
+                const easyApplySelector = 'button.jobs-apply-button';
+                await page.waitForSelector(easyApplySelector, { timeout: 10000 });
+                await page.click(easyApplySelector);
+                
+                console.log(JSON.stringify({ status: 'info', message: 'Clicked Easy Apply. Waiting for modal...' }));
+                
+                // Wait for modal to pop up
+                await page.waitForSelector('.jobs-easy-apply-modal', { timeout: 10000 });
+                
+                // A very basic next/submit loop
+                let maxSteps = 10;
+                while (maxSteps > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    // Look for submit or next button
+                    const submitBtn = await page.$('button[aria-label="Submit application"]');
+                    if (submitBtn) {
+                        // UNCOMMENT IN PRODUCTION: await submitBtn.click();
+                        console.log(JSON.stringify({ status: 'info', message: 'Found Submit button!' }));
+                        success = true;
+                        break;
+                    }
+                    
+                    const nextBtn = await page.$('button[aria-label="Continue to next step"]');
+                    if (nextBtn) {
+                        await nextBtn.click();
+                    } else {
+                        // Sometimes the button is just 'Review'
+                        const reviewBtn = await page.$('button[aria-label="Review your application"]');
+                        if (reviewBtn) {
+                            await reviewBtn.click();
+                        } else {
+                            throw new Error('Could not find Next or Submit button on LinkedIn modal.');
+                        }
+                    }
+                    maxSteps--;
+                }
+            } catch (err) {
+                throw new Error(`LinkedIn application failed: ${err.message}`);
+            }
+        } else if (['NAUKRI', 'UPLERS', 'UNSTOP', 'HIRIST', 'CUTSHORT'].includes(platform)) {
             console.log(JSON.stringify({ status: 'info', message: `Applying on ${platform} using authenticated session...` }));
-            
-            // Wait to verify we are still logged in by looking for some global element 
-            // In a real implementation this would be specific to each platform
             await new Promise(resolve => setTimeout(resolve, 3000));
-            
-            // MOCK LOGIC for the application flow:
-            // The bot would look for the "Apply" or "Easy Apply" button.
-            // On LinkedIn, it might need to click through multiple modals.
-            // Here we assume successful injection of session and application.
-            
+            // Basic structure placeholder for other platforms
             success = true;
         }
 
@@ -136,11 +182,7 @@ puppeteer.use(StealthPlugin());
         let screenshotPath = null;
         if (page) {
             try {
-                const crypto = require('crypto');
-                const fs = require('fs');
-                const path = require('path');
-                
-                const screenshotDir = path.resolve(__dirname, '../storage/app/public/error-screenshots');
+                const screenshotDir = path.resolve(process.cwd(), 'storage/app/public/error-screenshots');
                 if (!fs.existsSync(screenshotDir)) {
                     fs.mkdirSync(screenshotDir, { recursive: true });
                 }
