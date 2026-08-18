@@ -63,7 +63,6 @@ puppeteer.use(StealthPlugin());
                 '--disable-crash-reporter',
                 '--disable-gpu',
                 '--disable-software-rasterizer',
-                '--single-process',
                 '--user-data-dir=/tmp/puppeteer_data'
             ];
             launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
@@ -229,6 +228,18 @@ puppeteer.use(StealthPlugin());
                 }
 
                 console.error(`[DEBUG] Page title: ${jobs.pageTitle}, Nodes found: ${jobs.nodeCount}`);
+                
+                if (jobs.nodeCount === 0) {
+                    try {
+                        const currentUrl = await page.url();
+                        console.error(`[DEBUG] Current URL: ${currentUrl}`);
+                        await page.screenshot({ path: `${session_dir}/empty_jobs.png`, fullPage: false });
+                        console.error(`[DEBUG] Saved screenshot to ${session_dir}/empty_jobs.png`);
+                    } catch (e) {
+                        console.error(`[DEBUG] Failed to capture debug info: ${e.message}`);
+                    }
+                }
+                
                 allJobs.push(...jobs.extracted);
 
             } catch (err) {

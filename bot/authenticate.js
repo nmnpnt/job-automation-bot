@@ -56,7 +56,6 @@ puppeteer.use(StealthPlugin());
                 '--disable-crash-reporter',
                 '--disable-gpu',
                 '--disable-software-rasterizer',
-                '--single-process',
                 '--user-data-dir=/tmp/puppeteer_data'
             ];
             launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
