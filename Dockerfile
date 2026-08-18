@@ -45,6 +45,7 @@ WORKDIR /var/www
 COPY . /var/www
 
 # Install PHP dependencies
+ENV COMPOSER_MEMORY_LIMIT=-1
 RUN composer install --no-interaction --no-dev --optimize-autoloader
 
 # Install Node dependencies and build assets
