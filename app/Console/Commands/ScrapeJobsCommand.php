@@ -57,8 +57,8 @@ class ScrapeJobsCommand extends Command
                 $sessionDir = storage_path("app/bot-sessions/{$profile->user_id}/" . strtolower($platform));
                 
                 if (!file_exists($sessionDir) || !is_dir($sessionDir)) {
-                    $this->warn("Skipping {$platform} - No active session found.");
-                    continue;
+                    $this->warn("No active session found for {$platform}, but proceeding with unauthenticated scrape for testing...");
+                    // continue; // Commented out to allow testing without login
                 }
 
                 $this->info("Scraping {$platform}...");
