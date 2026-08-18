@@ -87,6 +87,7 @@ services:
     container_name: job-automation-worker
     restart: unless-stopped
     working_dir: /var/www
+    user: "www-data"
     command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
     volumes:
       - ./:/var/www
@@ -107,6 +108,7 @@ services:
     container_name: job-automation-scheduler
     restart: unless-stopped
     working_dir: /var/www
+    user: "www-data"
     command: php artisan schedule:work
     volumes:
       - ./:/var/www
