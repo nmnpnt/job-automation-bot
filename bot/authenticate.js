@@ -92,34 +92,26 @@ puppeteer.use(StealthPlugin());
         switch (platform) {
             case 'LINKEDIN':
                 verifyUrl = 'https://www.linkedin.com/feed/';
-                successSelector = '#global-nav, .global-nav';
                 break;
             case 'NAUKRI':
                 verifyUrl = 'https://www.naukri.com/mnjuser/profile';
-                successSelector = '.updateProfile, .profile-container';
                 break;
             case 'UPLERS':
                 verifyUrl = 'https://app.uplers.com/talent';
-                successSelector = '.talent-dashboard, .user-profile';
                 break;
             case 'UNSTOP':
                 verifyUrl = 'https://unstop.com/';
-                successSelector = '.logged-in, .user-profile';
                 break;
             case 'HIRIST':
                 verifyUrl = 'https://www.hirist.tech/candidate/dashboard';
-                successSelector = '.candidate-dashboard';
                 break;
             case 'CUTSHORT':
                 verifyUrl = 'https://cutshort.io/profile';
-                successSelector = '.user-profile, .profile-header';
                 break;
             case 'INDEED':
                 verifyUrl = 'https://www.indeed.com/';
-                successSelector = '#gnav-main-container, .gnav-header-inner';
                 break;
             default:
-                // If we don't have a specific verification, just assume it works if we can set cookies
                 console.log(JSON.stringify({ status: 'success', message: `Cookies loaded for ${platform}.` }));
                 await browser.close();
                 process.exit(0);
@@ -130,7 +122,15 @@ puppeteer.use(StealthPlugin());
             await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
             
             await page.goto(verifyUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-            await page.waitForSelector(successSelector, { timeout: 30000 });
+            await page.waitForSelector('body', { timeout: 30000 });
+            
+            const currentUrl = await page.url();
+            
+            // If the platform redirected us to a login page or checkpoint, the cookies are invalid
+            if (currentUrl.includes('login') || currentUrl.includes('checkpoint') || currentUrl.includes('auth')) {
+                throw new Error(`Redirected to ${currentUrl}`);
+            }
+            
             console.log(JSON.stringify({ status: 'success', message: `Authentication verified for ${platform}. Session saved.` }));
         } catch (e) {
             let currentUrl = 'Unknown';
