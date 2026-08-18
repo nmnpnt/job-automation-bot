@@ -135,8 +135,18 @@ class UserProfile extends Component
             'cookie_file' => $cookieFile
         ]);
 
+        $envVars = [];
+        if (file_exists('/.dockerenv')) {
+            $envVars['DOCKER_ENV'] = 'true';
+            $envVars['PUPPETEER_EXECUTABLE_PATH'] = '/usr/bin/chromium';
+        }
+
         // Run synchronously to confirm cookie works
-        $process = new \Symfony\Component\Process\Process(['node', $scriptPath, $inputData]);
+        $process = new \Symfony\Component\Process\Process(
+            ['node', $scriptPath, $inputData],
+            null,
+            $envVars
+        );
         $process->setTimeout(60); 
         
         try {
