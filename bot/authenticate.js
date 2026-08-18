@@ -133,13 +133,20 @@ puppeteer.use(StealthPlugin());
             await page.waitForSelector(successSelector, { timeout: 30000 });
             console.log(JSON.stringify({ status: 'success', message: `Authentication verified for ${platform}. Session saved.` }));
         } catch (e) {
-            // Take a screenshot to debug why it failed
+            let currentUrl = 'Unknown';
+            let pageTitle = 'Unknown';
+            try {
+                currentUrl = await page.url();
+                pageTitle = await page.title();
+            } catch (e) {}
+
             try {
                 const screenshotPath = `${session_dir}/error.png`;
-                await page.screenshot({ path: screenshotPath, fullPage: true });
-                console.error(JSON.stringify({ status: 'failed', message: `Cookie verification failed for ${platform}. Error: ${e.message}. Screenshot saved to ${screenshotPath}. Please ensure cookies are fresh.` }));
+                // Avoid fullPage to prevent Out-Of-Memory (OOM) crashes on 1GB instances
+                await page.screenshot({ path: screenshotPath, fullPage: false });
+                console.error(JSON.stringify({ status: 'failed', message: `Cookie verification failed for ${platform}. URL: ${currentUrl} | Title: ${pageTitle} | Error: ${e.message}. Screenshot saved.` }));
             } catch (screenshotError) {
-                console.error(JSON.stringify({ status: 'failed', message: `Cookie verification failed for ${platform}. Error: ${e.message}. (Failed to take screenshot). Please ensure cookies are fresh.` }));
+                console.error(JSON.stringify({ status: 'failed', message: `Cookie verification failed for ${platform}. URL: ${currentUrl} | Title: ${pageTitle} | Error: ${e.message}. (Screenshot failed).` }));
             }
             process.exitCode = 1;
         }
