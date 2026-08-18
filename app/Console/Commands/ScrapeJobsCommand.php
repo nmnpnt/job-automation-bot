@@ -68,6 +68,7 @@ class ScrapeJobsCommand extends Command
                     'platform' => $platform,
                     'session_dir' => $sessionDir,
                     'preferences' => $prefs,
+                    'is_docker' => file_exists('/.dockerenv')
                 ]);
 
                 $process = new \Symfony\Component\Process\Process(['node', $scriptPath, $inputData]);

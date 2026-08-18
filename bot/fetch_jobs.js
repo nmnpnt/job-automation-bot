@@ -55,7 +55,7 @@ puppeteer.use(StealthPlugin());
             }
         };
         
-        if (process.env.DOCKER_ENV) {
+        if (process.env.DOCKER_ENV || inputData.is_docker) {
             launchOptions.args = [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
