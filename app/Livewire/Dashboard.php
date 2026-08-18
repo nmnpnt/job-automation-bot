@@ -63,7 +63,12 @@ class Dashboard extends Component
     {
         if ($this->profile && $this->profile->scraping_status !== 'running') {
             $this->profile->update(['scraping_status' => 'running']);
-            \App\Jobs\RunScraperJob::dispatch($this->profile->id);
+            try {
+                \App\Jobs\RunScraperJob::dispatch($this->profile->id);
+            } catch (\Exception $e) {
+                $this->profile->update(['scraping_status' => 'idle']);
+                throw $e;
+            }
         }
     }
 

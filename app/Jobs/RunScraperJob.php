@@ -46,4 +46,16 @@ class RunScraperJob implements ShouldQueue
             $profile->update(['scraping_status' => 'failed']);
         }
     }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        $profile = Profile::find($this->profileId);
+        if ($profile) {
+            $profile->update(['scraping_status' => 'failed']);
+            Log::error("Scraping Job hard-failed: " . $exception->getMessage());
+        }
+    }
 }
