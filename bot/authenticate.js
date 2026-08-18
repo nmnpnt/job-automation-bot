@@ -2,6 +2,19 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import fs from 'fs';
 
+process.on('uncaughtException', (err) => {
+    if (err.message && err.message.includes('Requesting main frame too early')) {
+        return;
+    }
+    console.error(`Uncaught Exception: ${err.message}`);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    if (reason && reason.message && reason.message.includes('Requesting main frame too early')) {
+        return;
+    }
+});
+
 puppeteer.use(StealthPlugin());
 
 (async () => {
