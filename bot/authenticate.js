@@ -126,11 +126,21 @@ puppeteer.use(StealthPlugin());
         }
 
         try {
-            await page.goto(verifyUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-            await page.waitForSelector(successSelector, { timeout: 10000 });
+            // Set a realistic User-Agent to avoid immediate flagging
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+            
+            await page.goto(verifyUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+            await page.waitForSelector(successSelector, { timeout: 30000 });
             console.log(JSON.stringify({ status: 'success', message: `Authentication verified for ${platform}. Session saved.` }));
         } catch (e) {
-            console.error(JSON.stringify({ status: 'failed', message: `Cookie verification failed for ${platform}. Please ensure cookies are fresh.` }));
+            // Take a screenshot to debug why it failed
+            try {
+                const screenshotPath = `${session_dir}/error.png`;
+                await page.screenshot({ path: screenshotPath, fullPage: true });
+                console.error(JSON.stringify({ status: 'failed', message: `Cookie verification failed for ${platform}. Error: ${e.message}. Screenshot saved to ${screenshotPath}. Please ensure cookies are fresh.` }));
+            } catch (screenshotError) {
+                console.error(JSON.stringify({ status: 'failed', message: `Cookie verification failed for ${platform}. Error: ${e.message}. (Failed to take screenshot). Please ensure cookies are fresh.` }));
+            }
             process.exitCode = 1;
         }
 

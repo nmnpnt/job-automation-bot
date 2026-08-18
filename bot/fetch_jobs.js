@@ -163,9 +163,9 @@ puppeteer.use(StealthPlugin());
             }
 
             try {
-                await page.goto(searchUrl, { waitUntil: 'domcontentloaded' });
-                // Note: Real implementations would handle pagination, infinite scrolling, 
-                // and wait for specific selectors. This is a simplified mock extractor.
+                // Set a realistic User-Agent to avoid immediate flagging
+                await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+                await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
                 
                 // Wait a bit for dynamic content
                 await new Promise(r => setTimeout(r, 3000));
