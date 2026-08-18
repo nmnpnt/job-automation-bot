@@ -71,10 +71,6 @@ puppeteer.use(StealthPlugin());
             launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
         }
 
-        if (session_dir) {
-            launchOptions.userDataDir = session_dir;
-        }
-
         const browser = await puppeteer.launch(launchOptions);
         
         const page = await browser.newPage();

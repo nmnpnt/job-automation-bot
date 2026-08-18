@@ -58,10 +58,8 @@ puppeteer.use(StealthPlugin());
                 '--disable-software-rasterizer'
             ];
             launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
-            launchOptions.userDataDir = session_dir;
         } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
             launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
-            launchOptions.userDataDir = session_dir;
         }
         
         const browser = await puppeteer.launch(launchOptions);
