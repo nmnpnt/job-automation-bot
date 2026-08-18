@@ -140,6 +140,12 @@ puppeteer.use(StealthPlugin());
                 // Wait a bit for dynamic content
                 await new Promise(r => setTimeout(r, 3000));
                 
+                // Scroll 3 times to trigger infinite loading/lazy-loaded images
+                for (let i = 0; i < 3; i++) {
+                    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+                    await new Promise(r => setTimeout(r, 2000));
+                }
+                
                 const jobs = await page.evaluate((sel, plat) => {
                     const jobNodes = document.querySelectorAll(sel);
                     const extracted = [];
@@ -204,19 +210,10 @@ puppeteer.use(StealthPlugin());
             }
         }
 
-        // Filter jobs to ensure they match at least one of the target roles strictly
-        const matchedJobs = allJobs.filter(job => {
-            const titleLower = job.title.toLowerCase();
-            return roles.some(role => {
-                // Escape regex special chars and add word boundaries for exact phrase matching
-                const escapedRole = role.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const regex = new RegExp(`\\b${escapedRole}\\b`, 'i');
-                return regex.test(titleLower);
-            });
-        });
-
-        // Deduplicate jobs by URL
-        const uniqueJobs = Array.from(new Map(matchedJobs.map(item => [item.url, item])).values());
+        // We no longer strictly filter by regex because it was throwing away valid jobs
+        // like "Software Developer" when searching for "Software Engineer".
+        // Instead, we trust the platform's search results and just deduplicate by URL.
+        const uniqueJobs = Array.from(new Map(allJobs.map(item => [item.url, item])).values());
         
         await browser.close();
         
