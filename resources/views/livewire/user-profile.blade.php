@@ -286,7 +286,8 @@
                         @foreach($platforms as $platform => $data)
                             @php
                                 $sessionDir = storage_path("app/bot-sessions/{$userId}/" . strtolower($platform));
-                                $isAuthenticated = file_exists($sessionDir) && is_dir($sessionDir) && count(scandir($sessionDir)) > 2;
+                                $cookiesFile = $sessionDir . '/cookies.json';
+                                $isAuthenticated = file_exists($cookiesFile);
                             @endphp
                             <div class="flex flex-col justify-center p-5 bg-white/60 border border-white/80 rounded-[1.5rem] hover:shadow-lg transition-all duration-300 group/item hover:-translate-y-1">
                                 <div class="flex items-center justify-between">

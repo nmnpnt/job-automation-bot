@@ -161,9 +161,15 @@ class UserProfile extends Component
                 session()->flash("cookie_message_{$platform}", "{$platform} session saved and verified successfully!");
                 $this->platform_cookies[$platform] = ''; // clear it
             } else {
+                if (file_exists($cookieFile)) {
+                    unlink($cookieFile);
+                }
                 session()->flash("cookie_error_{$platform}", $finalOutput['message'] ?? 'Failed to verify cookie.');
             }
         } catch (\Exception $e) {
+            if (file_exists($cookieFile)) {
+                unlink($cookieFile);
+            }
             session()->flash("cookie_error_{$platform}", 'Cookie verification failed: ' . $e->getMessage());
         }
     }
