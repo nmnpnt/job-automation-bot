@@ -75,43 +75,39 @@ puppeteer.use(StealthPlugin());
 
         const browser = await puppeteer.launch(launchOptions);
         
-        const page = await browser.newPage();
-        
-        // Inject cookies if session exists
-        if (session_dir) {
-            const cookieFile = path.join(session_dir, 'cookies.json');
-            if (fs.existsSync(cookieFile)) {
-                try {
-                    const cookies = JSON.parse(fs.readFileSync(cookieFile, 'utf8'));
-            
-            // Clean cookies to prevent CDP Protocol errors
-            const cleanCookies = cookies.map(cookie => {
-                const { name, value, domain, path, secure, httpOnly, sameSite } = cookie;
-                const validCookie = { name, value, domain, path, secure, httpOnly };
-                
-                if (cookie.expirationDate) validCookie.expires = cookie.expirationDate;
-                else if (cookie.expires) validCookie.expires = cookie.expires;
-                
-                if (sameSite) {
-                    const normalizedSameSite = sameSite.charAt(0).toUpperCase() + sameSite.slice(1).toLowerCase();
-                    if (['Strict', 'Lax', 'None'].includes(normalizedSameSite)) {
-                        validCookie.sameSite = normalizedSameSite;
-                    }
-                }
-                return validCookie;
-            });
-            
-            await page.setCookie(...cleanCookies);
-                    console.error(`[DEBUG] Loaded cookies from ${cookieFile}`);
-                } catch (e) {
-                    console.error(`[DEBUG] Failed to load cookies: ${e.message}`);
-                }
-            }
-        }
-        
         let allJobs = [];
 
         for (const query of searchQueries) {
+            let page;
+            try {
+                page = await browser.newPage();
+                
+                // Inject cookies if session exists
+                if (session_dir) {
+                    const cookieFile = path.join(session_dir, 'cookies.json');
+                    if (fs.existsSync(cookieFile)) {
+                        try {
+                            const cookies = JSON.parse(fs.readFileSync(cookieFile, 'utf8'));
+                            const cleanCookies = cookies.map(cookie => {
+                                const { name, value, domain, path, secure, httpOnly, sameSite } = cookie;
+                                const validCookie = { name, value, domain, path, secure, httpOnly };
+                                if (cookie.expirationDate) validCookie.expires = cookie.expirationDate;
+                                else if (cookie.expires) validCookie.expires = cookie.expires;
+                                if (sameSite) {
+                                    const normalizedSameSite = sameSite.charAt(0).toUpperCase() + sameSite.slice(1).toLowerCase();
+                                    if (['Strict', 'Lax', 'None'].includes(normalizedSameSite)) validCookie.sameSite = normalizedSameSite;
+                                }
+                                return validCookie;
+                            });
+                            await page.setCookie(...cleanCookies);
+                        } catch (e) {}
+                    }
+                }
+            } catch (e) {
+                console.error(`Error preparing page for ${query.role}: ${e.message}`);
+                continue;
+            }
+            
             // Build Search URL based on platform
             let searchUrl = '';
             let jobSelector = '';
@@ -167,7 +163,7 @@ puppeteer.use(StealthPlugin());
             try {
                 // Set a realistic User-Agent to avoid immediate flagging
                 await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-                await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+                await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
                 
                 // Wait a bit for dynamic content
                 await new Promise(r => setTimeout(r, 3000));
@@ -247,6 +243,10 @@ puppeteer.use(StealthPlugin());
                     console.error('Failed to take screenshot on error.');
                 }
             }
+            
+            try {
+                if (page) await page.close();
+            } catch (e) {}
         }
 
         // We no longer strictly filter by regex because it was throwing away valid jobs
