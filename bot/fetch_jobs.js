@@ -143,7 +143,7 @@ puppeteer.use(StealthPlugin());
                     jobSelector = '.srp-jobtuple-wrapper';
                     break;
                 case 'UPLERS':
-                    searchUrl = `https://app.uplers.com/jobs?search=${keyword}`;
+                    searchUrl = `https://platform.uplers.com/talent/jobs?search=${keyword}`;
                     jobSelector = '.job-card';
                     break;
                 case 'UNSTOP':

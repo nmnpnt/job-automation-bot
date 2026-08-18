@@ -97,7 +97,7 @@ puppeteer.use(StealthPlugin());
                 verifyUrl = 'https://www.naukri.com/mnjuser/profile';
                 break;
             case 'UPLERS':
-                verifyUrl = 'https://app.uplers.com/talent';
+                verifyUrl = 'https://platform.uplers.com/talent';
                 break;
             case 'UNSTOP':
                 verifyUrl = 'https://unstop.com/';
