@@ -165,18 +165,22 @@ puppeteer.use(StealthPlugin());
             try {
                 // Set a realistic User-Agent to avoid immediate flagging
                 await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-                await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                await page.goto(searchUrl, { waitUntil: 'networkidle2', timeout: 60000 });
                 
                 // Wait a bit for dynamic content
                 await new Promise(r => setTimeout(r, 3000));
                 
                 // Scroll 3 times to trigger infinite loading/lazy-loaded images
                 for (let i = 0; i < 3; i++) {
-                    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+                    try {
+                        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+                    } catch(e) {}
                     await new Promise(r => setTimeout(r, 2000));
                 }
                 
-                const jobs = await page.evaluate((sel, plat) => {
+                let jobs = { extracted: [], nodeCount: 0, pageTitle: 'Failed' };
+                try {
+                    jobs = await page.evaluate((sel, plat) => {
                     const jobNodes = document.querySelectorAll(sel);
                     const extracted = [];
                     
@@ -222,6 +226,9 @@ puppeteer.use(StealthPlugin());
                     
                     return { extracted, nodeCount: jobNodes.length, pageTitle: document.title };
                 }, jobSelector, platform);
+                } catch(e) {
+                    console.error(`[DEBUG] Failed to evaluate jobs: ${e.message}`);
+                }
 
                 console.error(`[DEBUG] Page title: ${jobs.pageTitle}, Nodes found: ${jobs.nodeCount}`);
                 allJobs.push(...jobs.extracted);
