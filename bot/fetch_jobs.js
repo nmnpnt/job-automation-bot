@@ -51,12 +51,18 @@ puppeteer.use(StealthPlugin());
             launchOptions.args = [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage'
+                '--disable-dev-shm-usage',
+                '--disable-crash-reporter'
             ];
+            launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
         }
-
+        
         if (process.env.PUPPETEER_EXECUTABLE_PATH) {
             launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+        }
+
+        if (session_dir) {
+            launchOptions.userDataDir = session_dir;
         }
 
         const browser = await puppeteer.launch(launchOptions);
