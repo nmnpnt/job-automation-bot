@@ -20,7 +20,7 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - \
 # Install Chromium for Puppeteer (supports both AMD64 and ARM64)
 RUN apt-get update && apt-get install -y \
     chromium \
-    fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
+    fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-freefont-ttf libxss1 \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
