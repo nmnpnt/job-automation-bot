@@ -62,6 +62,26 @@ class CheckEmails extends Command
                                 default => 'Status updated from email.'
                             };
                             
+                            // If interview requested, extract more details and generate prep
+                            if ($status->value === 'INTERVIEW_REQUESTED') {
+                                $details = $parser->extractInterviewDetails($body);
+                                if ($details) {
+                                    $app->update([
+                                        'interview_date' => $details['interview_date'] ?? null,
+                                        'interview_link' => $details['interview_link'] ?? null,
+                                    ]);
+                                }
+
+                                // Auto-trigger mock interview prep
+                                try {
+                                    $prepService = app(\App\Services\GeminiMockInterviewService::class);
+                                    $prepNotes = $prepService->generatePrep($app->user, $app);
+                                    $app->update(['interview_prep_notes' => $prepNotes]);
+                                } catch (\Exception $e) {
+                                    $this->warn("Failed to auto-generate interview prep: " . $e->getMessage());
+                                }
+                            }
+                            
                             // Log event
                             $app->events()->create([
                                 'event_type' => $status->value,

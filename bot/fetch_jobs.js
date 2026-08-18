@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import fs from 'fs';
+import path from 'path';
 puppeteer.use(StealthPlugin());
 
 (async () => {
@@ -44,13 +45,37 @@ puppeteer.use(StealthPlugin());
     });
 
     try {
-        const browser = await puppeteer.launch({ 
-            headless: 'new',
-            userDataDir: session_dir,
-            defaultViewport: null
-        });
+        const launchOptions = { headless: 'new', defaultViewport: null };
+        
+        if (process.env.DOCKER_ENV) {
+            launchOptions.args = [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage'
+            ];
+        }
+
+        if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+        }
+
+        const browser = await puppeteer.launch(launchOptions);
         
         const page = await browser.newPage();
+        
+        // Inject cookies if session exists
+        if (session_dir) {
+            const cookieFile = path.join(session_dir, 'cookies.json');
+            if (fs.existsSync(cookieFile)) {
+                try {
+                    const cookies = JSON.parse(fs.readFileSync(cookieFile, 'utf8'));
+                    await page.setCookie(...cookies);
+                    console.error(`[DEBUG] Loaded cookies from ${cookieFile}`);
+                } catch (e) {
+                    console.error(`[DEBUG] Failed to load cookies: ${e.message}`);
+                }
+            }
+        }
         
         let allJobs = [];
 

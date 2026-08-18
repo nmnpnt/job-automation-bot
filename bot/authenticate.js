@@ -1,6 +1,8 @@
-import puppeteer from 'puppeteer';
-import path from 'path';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import fs from 'fs';
+
+puppeteer.use(StealthPlugin());
 
 (async () => {
     const args = process.argv.slice(2);
@@ -17,84 +19,97 @@ import fs from 'fs';
         process.exit(1);
     }
 
-    const { platform, session_dir } = inputData;
+    const { platform, session_dir, cookie_file } = inputData;
     
-    // Ensure session dir exists
-    if (!fs.existsSync(session_dir)) {
-        fs.mkdirSync(session_dir, { recursive: true });
+    if (!fs.existsSync(cookie_file)) {
+        console.error(JSON.stringify({ status: 'failed', message: 'Cookie file not found.' }));
+        process.exit(1);
     }
 
-    let loginUrl = '';
-    let successSelector = '';
-
-    switch (platform) {
-        case 'LINKEDIN':
-            loginUrl = 'https://www.linkedin.com/login';
-            successSelector = '#global-nav, .global-nav, .scaffold-layout'; // Broaden selector for logged-in state
-            break;
-        case 'NAUKRI':
-            loginUrl = 'https://login.naukri.com/nLogin/Login.php';
-            successSelector = '.nI-gNb-header__logo'; // Naukri logged in header
-            break;
-        case 'UPLERS':
-            loginUrl = 'https://app.uplers.com/login';
-            successSelector = '.sidebar-menu'; // Assuming a sidebar appears
-            break;
-        case 'UNSTOP':
-            loginUrl = 'https://unstop.com/login';
-            successSelector = '.avatar'; // User avatar
-            break;
-        case 'HIRIST':
-            loginUrl = 'https://www.hirist.tech/login';
-            successSelector = '.logged-in-user'; 
-            break;
-        case 'CUTSHORT':
-            loginUrl = 'https://cutshort.io/login';
-            successSelector = '#cs-header-user-menu';
-            break;
-        default:
-            console.error(JSON.stringify({ status: 'failed', message: 'Unknown platform' }));
-            process.exit(1);
+    let cookies = [];
+    try {
+        cookies = JSON.parse(fs.readFileSync(cookie_file, 'utf8'));
+        if (!Array.isArray(cookies)) throw new Error("Cookies must be a JSON array.");
+    } catch (e) {
+        console.error(JSON.stringify({ status: 'failed', message: 'Invalid cookie JSON format.' }));
+        process.exit(1);
     }
 
-    console.log(JSON.stringify({ status: 'info', message: `Launching browser for ${platform} authentication...` }));
+    console.log(JSON.stringify({ status: 'info', message: `Verifying cookies for ${platform}...` }));
 
     try {
-        // Launch visible browser
-        const browser = await puppeteer.launch({ 
-            headless: false,
-            userDataDir: session_dir,
-            defaultViewport: null,
-            args: [
-                '--disable-restore-session-state',
-                '--no-first-run',
-                '--no-default-browser-check'
-            ]
-        });
-        
-        // Use the first automatically opened tab instead of spawning a new blank one
-        const pages = await browser.pages();
-        const page = pages.length > 0 ? pages[0] : await browser.newPage();
-        
-        console.log(JSON.stringify({ status: 'info', message: `Please log in to ${platform} manually in the opened browser window.` }));
-        await page.goto(loginUrl, { waitUntil: 'networkidle2' }).catch(() => {});
-        
-        // Wait up to 5 minutes for the user to log in manually
-        // Or if the user closes the browser window manually after logging in
-        await Promise.race([
-            page.waitForSelector(successSelector, { timeout: 300000 }).catch(() => {}),
-            new Promise(resolve => browser.on('disconnected', resolve))
-        ]);
-        
-        console.log(JSON.stringify({ status: 'success', message: `Authentication finished for ${platform}. Session saved.` }));
-        
-        try {
-            await browser.close();
-        } catch (e) {
-            // Ignore if already closed
+        const launchOptions = { headless: 'new', defaultViewport: null };
+        if (process.env.DOCKER_ENV) {
+            launchOptions.args = [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage'
+            ];
         }
+        
+        if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+        }
+        
+        const browser = await puppeteer.launch(launchOptions);
+        const page = await browser.newPage();
+        
+        // Inject all cookies
+        await page.setCookie(...cookies);
+        
+        let verifyUrl = '';
+        let successSelector = '';
+
+        switch (platform) {
+            case 'LINKEDIN':
+                verifyUrl = 'https://www.linkedin.com/feed/';
+                successSelector = '#global-nav, .global-nav';
+                break;
+            case 'NAUKRI':
+                verifyUrl = 'https://www.naukri.com/mnjuser/profile';
+                successSelector = '.updateProfile, .profile-container';
+                break;
+            case 'UPLERS':
+                verifyUrl = 'https://app.uplers.com/talent';
+                successSelector = '.talent-dashboard, .user-profile';
+                break;
+            case 'UNSTOP':
+                verifyUrl = 'https://unstop.com/';
+                successSelector = '.logged-in, .user-profile';
+                break;
+            case 'HIRIST':
+                verifyUrl = 'https://www.hirist.tech/candidate/dashboard';
+                successSelector = '.candidate-dashboard';
+                break;
+            case 'CUTSHORT':
+                verifyUrl = 'https://cutshort.io/profile';
+                successSelector = '.user-profile, .profile-header';
+                break;
+            case 'INDEED':
+                verifyUrl = 'https://www.indeed.com/';
+                successSelector = '#gnav-main-container, .gnav-header-inner';
+                break;
+            default:
+                // If we don't have a specific verification, just assume it works if we can set cookies
+                console.log(JSON.stringify({ status: 'success', message: `Cookies loaded for ${platform}.` }));
+                await browser.close();
+                process.exit(0);
+        }
+
+        try {
+            await page.goto(verifyUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            await page.waitForSelector(successSelector, { timeout: 10000 });
+            console.log(JSON.stringify({ status: 'success', message: `Authentication verified for ${platform}. Session saved.` }));
+        } catch (e) {
+            console.error(JSON.stringify({ status: 'failed', message: `Cookie verification failed for ${platform}. Please ensure cookies are fresh.` }));
+            process.exitCode = 1;
+        }
+
+        await browser.close();
+        if (process.exitCode === 1) process.exit(1);
+        
     } catch (error) {
-        console.error(JSON.stringify({ status: 'failed', message: `Authentication timed out or failed: ${error.message}` }));
+        console.error(JSON.stringify({ status: 'failed', message: `Verification failed: ${error.message}` }));
         process.exit(1);
     }
 })();

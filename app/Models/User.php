@@ -37,6 +37,11 @@ class User extends Authenticatable
         return $this->hasOne(NotificationPreference::class);
     }
 
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
+
     public function routeNotificationForSlack(Notification $notification): mixed
     {
         return $this->notificationPreferences?->slack_webhook_url;

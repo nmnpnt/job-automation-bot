@@ -5,10 +5,10 @@ window.Pusher = Pusher;
 
 window.Echo = new Echo({
     broadcaster: 'reverb',
-    key: '12345',
-    wsHost: '127.0.0.1',
-    wsPort: 8080,
-    wssPort: 8080,
+    key: import.meta.env.VITE_REVERB_APP_KEY || '12345',
+    wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
+    wsPort: import.meta.env.VITE_REVERB_PORT ?? 8081,
+    wssPort: import.meta.env.VITE_REVERB_PORT ?? 8081,
     forceTLS: false,
     enabledTransports: ['ws', 'wss'],
 });

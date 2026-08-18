@@ -38,16 +38,34 @@ puppeteer.use(StealthPlugin());
 
     try {
         const launchOptions = { headless: 'new', defaultViewport: null };
-
-        if (session_dir) {
-            if (!fs.existsSync(session_dir)) {
-                fs.mkdirSync(session_dir, { recursive: true });
-            }
-            launchOptions.userDataDir = session_dir;
-        }
         
-        browser = await puppeteer.launch(launchOptions);
+        if (process.env.DOCKER_ENV) {
+            launchOptions.args = [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage'
+            ];
+        }
+
+        if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+        }
+
+        const browser = await puppeteer.launch(launchOptions);
         page = await browser.newPage();
+        
+        if (session_dir) {
+            const cookieFile = path.join(session_dir, 'cookies.json');
+            if (fs.existsSync(cookieFile)) {
+                try {
+                    const cookies = JSON.parse(fs.readFileSync(cookieFile, 'utf8'));
+                    await page.setCookie(...cookies);
+                    console.error(`[DEBUG] Loaded cookies from ${cookieFile}`);
+                } catch (e) {
+                    console.error(`[DEBUG] Failed to load cookies: ${e.message}`);
+                }
+            }
+        }
         
         // Mocking the navigation
         await page.goto(url, { waitUntil: 'networkidle2' }).catch(() => {});
@@ -125,6 +143,12 @@ puppeteer.use(StealthPlugin());
             
             // Wait to verify we are still logged in by looking for some global element
             try {
+                // Check if we are on a login/signup wall or not authenticated
+                const isLoginPage = await page.$('form.login__form, form.join-form, input#session_key, a[data-tracking-control-name="guest_homepage-basic_nav-header-signin"]');
+                if (isLoginPage) {
+                    throw new Error('Authentication Failed. The bot is not logged into LinkedIn. Please run the bot in non-headless mode once to login.');
+                }
+
                 // Wait for the "Easy Apply" button
                 const easyApplySelector = 'button.jobs-apply-button';
                 await page.waitForSelector(easyApplySelector, { timeout: 10000 });

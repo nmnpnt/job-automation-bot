@@ -1,4 +1,4 @@
-<div wire:poll.5s class="space-y-8 animate-fade-in-up">
+<div class="space-y-8 animate-fade-in-up">
     <!-- Page Header -->
     <div class="md:flex md:items-center md:justify-between bg-white/60 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/60 shadow-sm relative overflow-hidden">
         <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
@@ -105,11 +105,11 @@
                                         </p>
                                     </div>
                                     <div class="flex space-x-2">
-                                        <button wire:click="retryJob({{ $fjob->id }})" class="inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-colors focus:outline-none">
+                                        <button wire:click="retryJob({{ $fjob->id }})" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-colors focus:outline-none">
                                             <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                             Retry
                                         </button>
-                                        <button wire:click="deleteFailedJob({{ $fjob->id }})" class="inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-rose-600 shadow-sm border border-rose-200 hover:bg-rose-50 hover:text-rose-700 transition-colors focus:outline-none" onclick="confirm('Are you sure you want to delete this failed job?') || event.stopImmediatePropagation()">
+                                        <button x-data x-on:click="$dispatch('ask-confirm', { message: 'Are you sure you want to delete this failed job?', onConfirm: () => $wire.deleteFailedJob({{ $fjob->id }}) })" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-rose-600 shadow-sm border border-rose-200 hover:bg-rose-50 hover:text-rose-700 transition-colors focus:outline-none">
                                             <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                             Del
                                         </button>

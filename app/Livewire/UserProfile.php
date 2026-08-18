@@ -49,6 +49,10 @@ class UserProfile extends Component
 
     public function save()
     {
+        if ($this->max_job_age_days === '') {
+            $this->max_job_age_days = null;
+        }
+
         $this->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -61,7 +65,7 @@ class UserProfile extends Component
             'target_roles' => 'nullable|string',
             'target_locations' => 'nullable|string',
             'remote_preference' => 'required|in:none,include,only',
-            'max_job_age_days' => 'required|integer|min:1|max:30',
+            'max_job_age_days' => 'nullable|integer|min:1|max:30',
         ]);
 
         $profile = auth()->user()->profile ?? new \App\Models\Profile(['user_id' => auth()->id()]);
@@ -76,7 +80,7 @@ class UserProfile extends Component
         $profile->target_roles = $this->target_roles;
         $profile->target_locations = $this->target_locations;
         $profile->remote_preference = $this->remote_preference;
-        $profile->max_job_age_days = $this->max_job_age_days;
+        $profile->max_job_age_days = $this->max_job_age_days === '' ? null : $this->max_job_age_days;
 
         if ($this->resume) {
             $path = $this->resume->store('resumes', 'public');
@@ -97,34 +101,69 @@ class UserProfile extends Component
         $this->saved = true;
     }
 
-    public function authenticatePlatform($platform)
+    public $platform_cookies = [];
+
+    public function savePlatformCookies($platform)
     {
+        $this->validate([
+            "platform_cookies.{$platform}" => 'required|string'
+        ]);
+
+        $cookieJsonString = $this->platform_cookies[$platform];
+        
+        // Ensure it's valid JSON
+        $decoded = json_decode($cookieJsonString, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+            session()->flash("cookie_error_{$platform}", 'Invalid JSON format. Please paste the exact JSON array exported from EditThisCookie.');
+            return;
+        }
+
         $userId = auth()->id();
         $sessionDir = storage_path("app/bot-sessions/{$userId}/" . strtolower($platform));
+        if (!file_exists($sessionDir)) {
+            mkdir($sessionDir, 0755, true);
+        }
+        
+        // Save the cookies locally so Node can read them
+        $cookieFile = $sessionDir . '/cookies.json';
+        file_put_contents($cookieFile, $cookieJsonString);
         
         $scriptPath = base_path('bot/authenticate.js');
         $inputData = json_encode([
             'platform' => strtoupper($platform),
-            'session_dir' => $sessionDir
+            'session_dir' => $sessionDir,
+            'cookie_file' => $cookieFile
         ]);
 
-        // We run this process asynchronously or just wait for it.
-        // For a seamless UI, we might dispatch a job, but since it requires a visible browser 
-        // on the user's local machine, running it synchronously (with a long timeout) 
-        // or starting it in the background is needed.
-        
-        // Let's run it in the background so the UI doesn't freeze.
-        // On Windows, we can use `start` or just run it via symfony process in background.
+        // Run synchronously to confirm cookie works
         $process = new \Symfony\Component\Process\Process(['node', $scriptPath, $inputData]);
-        $process->setTimeout(300); // 5 minutes
+        $process->setTimeout(60); 
         
         try {
-            // Note: Since this is web-requested, running a GUI app from PHP might fail depending on the OS service context.
-            // But for `php artisan serve` on local Windows, it usually works.
-            $process->start();
-            session()->flash('message', "Launched browser for {$platform} authentication. Please switch to the new browser window and log in.");
+            $process->run();
+            
+            // Combine both stdout and stderr to parse the output
+            $outputStr = $process->getOutput() . "\n" . $process->getErrorOutput();
+            $lines = array_filter(explode("\n", trim($outputStr)));
+            
+            $finalOutput = null;
+            // Get the last valid JSON object from the output
+            foreach (array_reverse($lines) as $line) {
+                $parsed = json_decode($line, true);
+                if (is_array($parsed) && isset($parsed['status'])) {
+                    $finalOutput = $parsed;
+                    break;
+                }
+            }
+            
+            if ($finalOutput && $finalOutput['status'] === 'success') {
+                session()->flash("cookie_message_{$platform}", "{$platform} session saved and verified successfully!");
+                $this->platform_cookies[$platform] = ''; // clear it
+            } else {
+                session()->flash("cookie_error_{$platform}", $finalOutput['message'] ?? 'Failed to verify cookie.');
+            }
         } catch (\Exception $e) {
-            session()->flash('error', "Failed to launch authentication window: " . $e->getMessage());
+            session()->flash("cookie_error_{$platform}", 'Cookie verification failed: ' . $e->getMessage());
         }
     }
 

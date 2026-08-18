@@ -76,15 +76,54 @@
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border {{ $statusColor }}">
                                     {{ str_replace('_', ' ', $job->status->name) }}
                                 </span>
+                                @if(in_array($job->status->value, ['DISCOVERED', 'PENDING_REVIEW', 'READY_TO_APPLY']))
+                                <div class="mt-1.5 flex items-center text-[10px] text-indigo-500 font-semibold" title="This job is ready to be processed by the Auto-Apply Bot">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    Bot Ready
+                                </div>
+                                @elseif(in_array($job->status->value, ['FAILED']))
+                                <div class="mt-1.5 flex items-center text-[10px] text-rose-500 font-semibold" title="{{ $job->failure_reason ?? 'The bot attempted to apply but failed.' }}">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Bot Failed
+                                </div>
+                                @elseif(in_array($job->status->value, ['EXTERNAL_APPLICATION', 'COMPANY_WEBSITE', 'MANUAL_REQUIRED']))
+                                <div class="mt-1.5 flex items-center text-[10px] text-amber-500 font-semibold" title="This job redirects externally and requires manual application.">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                    Manual Apply Required
+                                </div>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-500">
                                 {{ $job->created_at->diffForHumans() }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex items-center space-x-2">
-                                    <button wire:click="generateCoverLetter({{ $job->id }})" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-700 transition-colors tooltip" title="Generate Cover Letter (Gemini)">
+                                    <button wire:click="generateCoverLetter({{ $job->id }})" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-700 transition-colors tooltip" title="Generate Cover Letter (Gemini)">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                                     </button>
+                                    <button wire:click="analyzeMatch({{ $job->id }})" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700 transition-colors tooltip" title="Analyze Resume Match (Gemini)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    </button>
+                                    @if(in_array($job->status->value, ['INTERVIEW_REQUESTED']))
+                                    <button wire:click="generateInterviewPrep({{ $job->id }})" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-violet-50 text-violet-500 hover:bg-violet-100 hover:text-violet-700 transition-colors tooltip" title="Generate Interview Prep (Gemini)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                                    </button>
+                                    @endif
+                                    @if(in_array($job->status->value, ['DISCOVERED', 'PENDING_REVIEW', 'READY_TO_APPLY', 'FAILED']))
+                                    <button x-data x-on:click="$dispatch('ask-confirm', { message: 'Launch bot to auto-apply to this job?', onConfirm: () => $wire.autoApply({{ $job->id }}) })" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-indigo-500 hover:bg-indigo-100 hover:text-indigo-700 transition-colors tooltip" title="Auto-Apply via Bot">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    </button>
+                                    @endif
+                                    @if(in_array($job->status->value, ['DISCOVERED', 'EXTERNAL_APPLICATION', 'COMPANY_WEBSITE', 'MANUAL_REQUIRED', 'FAILED']))
+                                    <button x-data x-on:click="$dispatch('ask-confirm', { message: 'Mark this job as manually applied?', onConfirm: () => $wire.markAsApplied({{ $job->id }}) })" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-amber-500 hover:bg-amber-100 hover:text-amber-700 transition-colors tooltip" title="Mark as Applied (Manual)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    </button>
+                                    @endif
+                                    @if(in_array($job->status->value, ['APPLIED', 'AUTO_APPLYING']))
+                                    <button x-data x-on:click="$dispatch('ask-confirm', { message: 'Did you get an interview request for this job?', onConfirm: () => $wire.markAsInterviewRequested({{ $job->id }}) })" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-pink-500 hover:bg-pink-100 hover:text-pink-700 transition-colors tooltip" title="Log Interview Request (Manual)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    </button>
+                                    @endif
                                     <a href="{{ $job->original_job_url }}" target="_blank" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors tooltip" title="View Original Job">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                                     </a>
@@ -133,6 +172,64 @@
                 
                 @if($generatedCoverLetter)
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap font-mono">{{ $generatedCoverLetter }}</div>
+                @endif
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button x-on:click="$dispatch('close')" class="bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 border border-slate-300 rounded-lg shadow-sm transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </x-modal>
+
+    <!-- Resume Feedback Modal -->
+    <x-modal name="resume-feedback-modal" focusable>
+        <div class="p-6">
+            <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                <svg class="w-6 h-6 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                AI Resume Analysis
+            </h2>
+            
+            <div class="mt-4">
+                <div wire:loading wire:target="analyzeMatch" class="w-full h-32 flex items-center justify-center">
+                    <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                
+                @if($generatedFeedback)
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap font-sans prose prose-slate max-w-none">{!! Str::markdown($generatedFeedback) !!}</div>
+                @endif
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button x-on:click="$dispatch('close')" class="bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 border border-slate-300 rounded-lg shadow-sm transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </x-modal>
+
+    <!-- Interview Prep Modal -->
+    <x-modal name="interview-prep-modal" focusable>
+        <div class="p-6">
+            <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                <svg class="w-6 h-6 text-violet-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                AI Interview Prep
+            </h2>
+            
+            <div class="mt-4 max-h-[60vh] overflow-y-auto">
+                <div wire:loading wire:target="generateInterviewPrep" class="w-full h-32 flex items-center justify-center">
+                    <svg class="animate-spin h-8 w-8 text-violet-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                
+                @if(isset($generatedInterviewPrep) && $generatedInterviewPrep)
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm text-slate-700 whitespace-pre-wrap font-sans prose prose-slate max-w-none">{!! Str::markdown($generatedInterviewPrep) !!}</div>
                 @endif
             </div>
 
