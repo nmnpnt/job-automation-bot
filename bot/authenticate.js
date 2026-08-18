@@ -65,8 +65,26 @@ puppeteer.use(StealthPlugin());
         const browser = await puppeteer.launch(launchOptions);
         const page = await browser.newPage();
         
-        // Inject all cookies
-        await page.setCookie(...cookies);
+        // Clean cookies before injecting to prevent CDP Protocol errors
+        const cleanCookies = cookies.map(cookie => {
+            const { name, value, domain, path, secure, httpOnly, sameSite } = cookie;
+            const validCookie = { name, value, domain, path, secure, httpOnly };
+            
+            if (cookie.expirationDate) validCookie.expires = cookie.expirationDate;
+            else if (cookie.expires) validCookie.expires = cookie.expires;
+            
+            if (sameSite) {
+                // Ensure SameSite is a valid CDP enum value
+                const normalizedSameSite = sameSite.charAt(0).toUpperCase() + sameSite.slice(1).toLowerCase();
+                if (['Strict', 'Lax', 'None'].includes(normalizedSameSite)) {
+                    validCookie.sameSite = normalizedSameSite;
+                }
+            }
+            
+            return validCookie;
+        });
+        
+        await page.setCookie(...cleanCookies);
         
         let verifyUrl = '';
         let successSelector = '';
