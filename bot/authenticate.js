@@ -39,15 +39,14 @@ puppeteer.use(StealthPlugin());
 
     try {
         const launchOptions = { headless: 'new', defaultViewport: null };
-        if (process.env.DOCKER_ENV) {
+        if (process.env.DOCKER_ENV || inputData.is_docker) {
             launchOptions.args = [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage'
             ];
-        }
-        
-        if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
+        } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
             launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
         }
         

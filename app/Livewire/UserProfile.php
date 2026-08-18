@@ -132,21 +132,12 @@ class UserProfile extends Component
         $inputData = json_encode([
             'platform' => strtoupper($platform),
             'session_dir' => $sessionDir,
-            'cookie_file' => $cookieFile
+            'cookie_file' => $cookieFile,
+            'is_docker' => file_exists('/.dockerenv')
         ]);
 
-        $envVars = [];
-        if (file_exists('/.dockerenv')) {
-            $envVars['DOCKER_ENV'] = 'true';
-            $envVars['PUPPETEER_EXECUTABLE_PATH'] = '/usr/bin/chromium';
-        }
-
         // Run synchronously to confirm cookie works
-        $process = new \Symfony\Component\Process\Process(
-            ['node', $scriptPath, $inputData],
-            null,
-            $envVars
-        );
+        $process = new \Symfony\Component\Process\Process(['node', $scriptPath, $inputData]);
         $process->setTimeout(60); 
         
         try {
