@@ -38,13 +38,24 @@ puppeteer.use(StealthPlugin());
     console.log(JSON.stringify({ status: 'info', message: `Verifying cookies for ${platform}...` }));
 
     try {
-        const launchOptions = { headless: 'new', defaultViewport: null };
+        const launchOptions = { 
+            headless: 'new', 
+            defaultViewport: null,
+            env: {
+                ...process.env,
+                XDG_CONFIG_HOME: '/tmp',
+                XDG_CACHE_HOME: '/tmp'
+            }
+        };
+        
         if (process.env.DOCKER_ENV || inputData.is_docker) {
             launchOptions.args = [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-crash-reporter'
+                '--disable-crash-reporter',
+                '--disable-gpu',
+                '--disable-software-rasterizer'
             ];
             launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
             launchOptions.userDataDir = session_dir;
