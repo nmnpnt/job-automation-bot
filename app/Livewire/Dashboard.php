@@ -10,6 +10,7 @@ class Dashboard extends Component
     public $totalApplied = 0;
     public $successRate = 0;
     public $interviews = 0;
+    public $upcomingInterviews = [];
     public $platformStats = [];
     public $statusStats = [];
     public $profile;
@@ -37,6 +38,13 @@ class Dashboard extends Component
             ->where('status', 'INTERVIEW_REQUESTED')
             ->count();
 
+        // 4b. Upcoming Scheduled Interviews
+        $this->upcomingInterviews = \App\Models\Application::where('user_id', $userId)
+            ->whereNotNull('interview_scheduled_at')
+            ->orderBy('interview_scheduled_at', 'asc')
+            ->take(5)
+            ->get();
+
         // 5. Stats by Platform (Interviews)
         $platforms = \App\Models\Application::where('user_id', $userId)
             ->select('application_source', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
@@ -62,13 +70,31 @@ class Dashboard extends Component
     public function startScraping()
     {
         if ($this->profile && $this->profile->scraping_status !== 'running') {
-            $this->profile->update(['scraping_status' => 'running']);
+            $this->profile->update(['scraping_status' => 'running', 'scraper_pid' => null]);
             try {
                 \App\Jobs\RunScraperJob::dispatch($this->profile->id);
             } catch (\Exception $e) {
                 $this->profile->update(['scraping_status' => 'idle']);
                 throw $e;
             }
+        }
+    }
+
+    public function stopScraping()
+    {
+        if ($this->profile && $this->profile->scraping_status === 'running') {
+            if ($this->profile->scraper_pid) {
+                // Kill the node process
+                // Using taskkill on Windows, kill on Unix
+                if (strncasecmp(PHP_OS, 'WIN', 3) == 0) {
+                    exec("taskkill /F /PID {$this->profile->scraper_pid} /T");
+                } else {
+                    exec("kill -TERM {$this->profile->scraper_pid}");
+                }
+            }
+            $this->profile->update(['scraping_status' => 'idle', 'scraper_pid' => null]);
+            $logFile = storage_path("logs/scraper-{$this->profile->user_id}.log");
+            file_put_contents($logFile, "\n[SYSTEM] Scraper manually stopped by user.\n", FILE_APPEND);
         }
     }
 

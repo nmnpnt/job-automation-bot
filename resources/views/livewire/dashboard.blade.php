@@ -1,5 +1,6 @@
-<div class="space-y-8 animate-fade-in-up">
+<div x-data="{ tab: 'overview' }" class="space-y-8 animate-fade-in-up">
     <style>
+        [x-cloak] { display: none !important; }
         .animate-fade-in-up {
             animation: fadeInUp 0.6s ease-out forwards;
         }
@@ -26,40 +27,17 @@
             </h2>
             <p class="mt-1 text-sm text-slate-500 font-medium">Track your job search progress and system automations in real-time.</p>
         </div>
-        <div class="mt-6 md:mt-0 md:ml-4 flex items-center space-x-4 relative z-10">
-            <!-- Scraper Control -->
-            <div wire:poll.5s class="flex items-center space-x-3 bg-white/80 backdrop-blur-md pl-4 pr-1 py-1 rounded-2xl shadow-sm border border-slate-200">
-                @if($profile)
-                    <div class="flex items-center">
-                        <div class="w-2 h-2 rounded-full mr-2 {{ $profile->scraping_status === 'running' ? 'bg-amber-500 animate-pulse' : ($profile->scraping_status === 'completed' ? 'bg-emerald-500' : 'bg-slate-400') }}"></div>
-                        <span class="text-xs font-bold uppercase tracking-wide text-slate-500">
-                            @if($profile->scraping_status === 'running')
-                                <span class="text-amber-600">Running</span>
-                            @elseif($profile->scraping_status === 'completed')
-                                <span class="text-emerald-600">Idle</span>
-                            @elseif($profile->scraping_status === 'failed')
-                                <span class="text-rose-600">Failed</span>
-                            @else
-                                <span>Idle</span>
-                            @endif
-                        </span>
-                    </div>
-                    
-                    <button wire:click="startScraping" @if($profile->scraping_status === 'running') disabled @endif class="inline-flex items-center justify-center rounded-xl border border-transparent bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-indigo-600 focus:outline-none transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed group">
-                        <svg class="h-4 w-4 mr-2 text-slate-400 group-hover:text-indigo-200 transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                        </svg>
-                        Scrape
-                    </button>
-                @endif
-            </div>
-
-            <a href="{{ route('resume.view') }}" target="_blank" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 focus:outline-none transition-all duration-200 hover:-translate-y-0.5">
-                <svg class="h-4 w-4 mr-2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                Resume
-            </a>
-        </div>
     </div>
+
+    <!-- Tabs Navigation -->
+    <div class="flex space-x-1 bg-white/60 p-1 rounded-2xl w-fit border border-slate-200/60 backdrop-blur-xl shadow-sm mb-4">
+        <button @click="tab = 'overview'" :class="tab === 'overview' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2 rounded-xl text-sm font-bold transition-all">Overview</button>
+        <button @click="tab = 'analytics'" :class="tab === 'analytics' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2 rounded-xl text-sm font-bold transition-all">Analytics</button>
+        <button @click="tab = 'queue'" :class="tab === 'queue' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2 rounded-xl text-sm font-bold transition-all">Review Queue</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div x-cloak x-show="tab === 'overview'" x-transition.opacity.duration.300ms class="space-y-8">
 
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -121,6 +99,61 @@
             <p class="text-3xl font-black text-slate-900 mt-1 relative z-10">{{ $interviews }}</p>
         </div>
     </div>
+
+    <!-- Upcoming Scheduled Interviews Section -->
+    @if(count($upcomingInterviews) > 0)
+    <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex items-center justify-between mb-6 relative z-10">
+            <div class="flex items-center space-x-3">
+                <div class="p-3 bg-white/10 rounded-2xl backdrop-blur-md border border-white/10">
+                    <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black tracking-tight">Upcoming Scheduled Interviews</h3>
+                    <p class="text-xs text-purple-200">Stay prepared for your upcoming technical and behavioral rounds.</p>
+                </div>
+            </div>
+            <a href="{{ route('jobs.index') }}" class="text-xs font-bold bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl transition-colors backdrop-blur-md">
+                Manage All
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+            @foreach($upcomingInterviews as $interview)
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 hover:border-purple-400/50 transition-all">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/40 text-purple-200 uppercase tracking-wider mb-2">
+                            {{ $interview->interview_type ?? 'Interview' }}
+                        </span>
+                        <h4 class="text-sm font-bold text-white">{{ Str::limit($interview->job_title, 32) }}</h4>
+                        <p class="text-xs text-slate-300 font-medium">{{ $interview->company_name }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                    <div class="flex items-center text-purple-200 font-semibold">
+                        <svg class="w-4 h-4 mr-1.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {{ $interview->interview_scheduled_at ? $interview->interview_scheduled_at->format('M d, Y - h:i A') : 'Date TBD' }}
+                    </div>
+                    @if($interview->interview_meeting_link)
+                    <a href="{{ $interview->interview_meeting_link }}" target="_blank" class="inline-flex items-center text-xs font-bold text-emerald-300 hover:text-emerald-200">
+                        Join Call
+                        <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    </div>
+
+    <!-- Analytics Tab -->
+    <div x-cloak x-show="tab === 'analytics'" x-transition.opacity.duration.300ms class="space-y-8">
 
     <!-- Details Section -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -199,8 +232,15 @@
         <livewire:job-analytics />
     </div>
 
+    </div>
+
+    <!-- Queue Tab -->
+    <div x-cloak x-show="tab === 'queue'" x-transition.opacity.duration.300ms class="space-y-8">
+
     <!-- Job Review Queue -->
     <div class="bg-white/80 backdrop-blur-xl rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-6">
         <livewire:job-review-queue />
+    </div>
+    
     </div>
 </div>

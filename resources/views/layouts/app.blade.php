@@ -79,6 +79,8 @@
                             @endif
                         </div>
                         
+                        <!-- Right Side: Topbar -->
+                        <livewire:layout.topbar />
 
                     </div>
                 </header>

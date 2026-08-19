@@ -13,6 +13,10 @@
         </div>
         
         <div class="mt-6 md:mt-0 md:ml-4 flex items-center space-x-4 relative z-10">
+            <button wire:click="exportCSV" class="flex items-center space-x-2 bg-white/80 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-sm border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-white hover:text-indigo-600 transition-colors">
+                <svg class="w-5 h-5 text-slate-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span>Export CSV</span>
+            </button>
             <div class="flex items-center space-x-3 bg-white/80 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-sm border border-slate-200">
                 <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
                 <select wire:model.live="filterSource" id="filterSource" class="bg-transparent border-0 focus:ring-0 text-sm font-semibold text-slate-700 py-0 pl-1 pr-8 cursor-pointer appearance-none">
@@ -97,36 +101,45 @@
                                 {{ $job->created_at->diffForHumans() }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex items-center space-x-2">
-                                    <button wire:click="generateCoverLetter({{ $job->id }})" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-700 transition-colors tooltip" title="Generate Cover Letter (Gemini)">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                                    </button>
-                                    <button wire:click="analyzeMatch({{ $job->id }})" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700 transition-colors tooltip" title="Analyze Resume Match (Gemini)">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                    </button>
-                                    @if(in_array($job->status->value, ['INTERVIEW_REQUESTED']))
-                                    <button wire:click="generateInterviewPrep({{ $job->id }})" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-violet-50 text-violet-500 hover:bg-violet-100 hover:text-violet-700 transition-colors tooltip" title="Generate Interview Prep (Gemini)">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                                    </button>
-                                    @endif
-                                    @if(in_array($job->status->value, ['DISCOVERED', 'PENDING_REVIEW', 'READY_TO_APPLY', 'FAILED']))
-                                    <button x-data x-on:click="$dispatch('ask-confirm', { message: 'Launch bot to auto-apply to this job?', onConfirm: () => $wire.autoApply({{ $job->id }}) })" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-indigo-500 hover:bg-indigo-100 hover:text-indigo-700 transition-colors tooltip" title="Auto-Apply via Bot">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                    </button>
-                                    @endif
-                                    @if(in_array($job->status->value, ['DISCOVERED', 'EXTERNAL_APPLICATION', 'COMPANY_WEBSITE', 'MANUAL_REQUIRED', 'FAILED']))
-                                    <button x-data x-on:click="$dispatch('ask-confirm', { message: 'Mark this job as manually applied?', onConfirm: () => $wire.markAsApplied({{ $job->id }}) })" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-amber-500 hover:bg-amber-100 hover:text-amber-700 transition-colors tooltip" title="Mark as Applied (Manual)">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    </button>
-                                    @endif
-                                    @if(in_array($job->status->value, ['APPLIED', 'AUTO_APPLYING']))
-                                    <button x-data x-on:click="$dispatch('ask-confirm', { message: 'Did you get an interview request for this job?', onConfirm: () => $wire.markAsInterviewRequested({{ $job->id }}) })" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-pink-500 hover:bg-pink-100 hover:text-pink-700 transition-colors tooltip" title="Log Interview Request (Manual)">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                    </button>
-                                    @endif
-                                    <a href="{{ $job->original_job_url }}" target="_blank" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors tooltip" title="View Original Job">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                <div class="flex items-center space-x-1.5">
+                                    <!-- Apply on Portal (External Link) -->
+                                    <a href="{{ $job->original_job_url }}" target="_blank" class="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold text-xs transition-colors shadow-sm" title="Apply directly on portal">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                        Apply
                                     </a>
+
+                                    <!-- Mark as Applied (Toggle) -->
+                                    @if($job->status->value !== 'APPLIED')
+                                    <button wire:click="markAsApplied({{ $job->id }})" wire:loading.attr="disabled" class="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-bold text-xs transition-colors shadow-sm" title="Mark as Applied">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        Mark Applied
+                                    </button>
+                                    @else
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md bg-emerald-100 text-emerald-800 text-xs font-bold">
+                                        ✓ Applied
+                                    </span>
+                                    @endif
+
+                                    <!-- Schedule Interview Button -->
+                                    <button wire:click="openScheduleModal({{ $job->id }})" class="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 font-bold text-xs transition-colors shadow-sm" title="Schedule Interview & Send Notifications">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        Interview
+                                    </button>
+
+                                    <!-- AI Cover Letter -->
+                                    <button wire:click="generateCoverLetter({{ $job->id }})" wire:loading.attr="disabled" class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-50 text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Generate AI Cover Letter">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                                    </button>
+
+                                    <!-- AI Resume Match -->
+                                    <button wire:click="analyzeMatch({{ $job->id }})" wire:loading.attr="disabled" class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-50 text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Analyze Resume Match">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    </button>
+
+                                    <!-- AI Interview Prep -->
+                                    <button wire:click="generateInterviewPrep({{ $job->id }})" wire:loading.attr="disabled" class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-50 text-slate-500 hover:bg-violet-50 hover:text-violet-600 transition-colors" title="Generate AI Interview Prep">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -239,5 +252,60 @@
                 </button>
             </div>
         </div>
+    </x-modal>
+
+    <!-- Schedule Interview Modal -->
+    <x-modal name="schedule-interview-modal" focusable>
+        <form wire:submit.prevent="saveScheduledInterview" class="p-6">
+            <h2 class="text-xl font-bold text-slate-900 mb-1 flex items-center">
+                <div class="p-2 bg-purple-100 text-purple-600 rounded-xl mr-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                Schedule Interview & Send Alert
+            </h2>
+            <p class="text-xs text-slate-500 mb-5">Set interview details. We will automatically send a notification to your Slack and WhatsApp channels.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Interview Date & Time</label>
+                    <input type="datetime-local" wire:model="interview_scheduled_at" required class="block w-full rounded-xl border-slate-300 text-sm focus:border-purple-500 focus:ring-purple-500">
+                    @error('interview_scheduled_at') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Interview Round / Type</label>
+                    <select wire:model="interview_type" required class="block w-full rounded-xl border-slate-300 text-sm focus:border-purple-500 focus:ring-purple-500">
+                        <option value="HR Phone Screen">HR Phone Screen</option>
+                        <option value="Technical Interview">Technical Interview</option>
+                        <option value="System Design">System Design</option>
+                        <option value="Managerial / Behavioral">Managerial / Behavioral</option>
+                        <option value="Final Round / Partner">Final Round / Partner</option>
+                    </select>
+                    @error('interview_type') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Meeting Link (Google Meet / Zoom / Teams)</label>
+                    <input type="url" wire:model="interview_meeting_link" placeholder="https://meet.google.com/..." class="block w-full rounded-xl border-slate-300 text-sm focus:border-purple-500 focus:ring-purple-500">
+                    @error('interview_meeting_link') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Preparation Notes / Instructions</label>
+                    <textarea wire:model="interview_notes" rows="3" placeholder="Topics to review, interviewer names, coding focus..." class="block w-full rounded-xl border-slate-300 text-sm focus:border-purple-500 focus:ring-purple-500"></textarea>
+                    @error('interview_notes') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" x-on:click="$dispatch('close')" class="bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 border border-slate-300 rounded-xl transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" wire:loading.attr="disabled" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-5 py-2 text-sm font-bold rounded-xl shadow-md hover:from-purple-700 hover:to-indigo-700 transition-all flex items-center">
+                    <span wire:loading.remove wire:target="saveScheduledInterview">Save & Dispatch Alerts</span>
+                    <span wire:loading wire:target="saveScheduledInterview">Saving...</span>
+                </button>
+            </div>
+        </form>
     </x-modal>
 </div>

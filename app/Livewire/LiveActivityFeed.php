@@ -9,9 +9,12 @@ use Livewire\Attributes\On;
 class LiveActivityFeed extends Component
 {
     public $activities = [];
+    public $profile;
 
     public function mount()
     {
+        $this->profile = \App\Models\Profile::where('user_id', auth()->id())->first();
+
         // Load recent applications and their latest events
         $this->activities = Application::with(['events' => function ($query) {
             $query->latest()->limit(1);
@@ -23,6 +26,36 @@ class LiveActivityFeed extends Component
             return $this->formatActivity($app, $app->status->value, $app->events->first()?->message ?? 'Application updated');
         })
         ->toArray();
+    }
+
+    public function startScraping()
+    {
+        if ($this->profile && $this->profile->scraping_status !== 'running') {
+            $this->profile->update(['scraping_status' => 'running', 'scraper_pid' => null]);
+            try {
+                \App\Jobs\RunScraperJob::dispatch($this->profile->id);
+            } catch (\Exception $e) {
+                $this->profile->update(['scraping_status' => 'idle']);
+                throw $e;
+            }
+        }
+    }
+
+    public function stopScraping()
+    {
+        if ($this->profile && $this->profile->scraping_status === 'running') {
+            if ($this->profile->scraper_pid) {
+                // Kill the node process
+                if (strncasecmp(PHP_OS, 'WIN', 3) == 0) {
+                    exec("taskkill /F /PID {$this->profile->scraper_pid} /T");
+                } else {
+                    exec("kill -TERM {$this->profile->scraper_pid}");
+                }
+            }
+            $this->profile->update(['scraping_status' => 'idle', 'scraper_pid' => null]);
+            $logFile = storage_path("logs/scraper-{$this->profile->user_id}.log");
+            file_put_contents($logFile, "\n[SYSTEM] Scraper manually stopped by user.\n", FILE_APPEND);
+        }
     }
 
     #[On('echo:activity-feed,.ActivityLogged')]

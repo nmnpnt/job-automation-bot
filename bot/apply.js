@@ -49,6 +49,20 @@ puppeteer.use(StealthPlugin());
 
         if (process.env.PUPPETEER_EXECUTABLE_PATH) {
             launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+        } else {
+            const possibleChromePaths = [
+                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+                'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+                '/usr/bin/chromium',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/google-chrome'
+            ];
+            for (const p of possibleChromePaths) {
+                if (fs.existsSync(p)) {
+                    launchOptions.executablePath = p;
+                    break;
+                }
+            }
         }
 
         const browser = await puppeteer.launch(launchOptions);

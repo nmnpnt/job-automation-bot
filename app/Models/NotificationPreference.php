@@ -25,6 +25,7 @@ class NotificationPreference extends Model
         'channel_push' => 'boolean',
         'channel_telegram' => 'boolean',
         'channel_slack' => 'boolean',
+        'channel_whatsapp' => 'boolean',
     ];
 
     public function user()

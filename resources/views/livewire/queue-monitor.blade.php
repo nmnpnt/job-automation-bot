@@ -19,7 +19,7 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 items-start">
         <!-- Pending Jobs -->
         <div class="bg-white/80 backdrop-blur-xl rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
             <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -36,7 +36,7 @@
                 </span>
             </div>
             
-            <div class="flex-1 p-0">
+            <div class="flex-1 p-0 overflow-y-auto max-h-[600px] custom-scrollbar">
                 @if($pendingJobs->count() > 0)
                     <ul role="list" class="divide-y divide-slate-100">
                         @foreach ($pendingJobs as $job)
@@ -88,7 +88,7 @@
                 </span>
             </div>
             
-            <div class="flex-1 p-0">
+            <div class="flex-1 p-0 overflow-y-auto max-h-[600px] custom-scrollbar">
                 @if($failedJobs->count() > 0)
                     <ul role="list" class="divide-y divide-slate-100">
                         @foreach ($failedJobs as $fjob)
@@ -105,11 +105,11 @@
                                         </p>
                                     </div>
                                     <div class="flex space-x-2">
-                                        <button wire:click="retryJob({{ $fjob->id }})" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-colors focus:outline-none">
+                                        <button wire:click="retryJob('{{ $fjob->uuid }}')" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 transition-colors focus:outline-none">
                                             <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                             Retry
                                         </button>
-                                        <button x-data x-on:click="$dispatch('ask-confirm', { message: 'Are you sure you want to delete this failed job?', onConfirm: () => $wire.deleteFailedJob({{ $fjob->id }}) })" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-rose-600 shadow-sm border border-rose-200 hover:bg-rose-50 hover:text-rose-700 transition-colors focus:outline-none">
+                                        <button wire:confirm="Are you sure you want to delete this failed job?" wire:click="deleteFailedJob('{{ $fjob->uuid }}')" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-rose-600 shadow-sm border border-rose-200 hover:bg-rose-50 hover:text-rose-700 transition-colors focus:outline-none">
                                             <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                             Del
                                         </button>
@@ -129,6 +129,31 @@
                 @endif
             </div>
         </div>
+
+        <!-- Success Jobs / Completed Scrapes -->
+        <div class="bg-white/80 backdrop-blur-xl rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-emerald-50/50">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mr-4">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900">Success</h3>
+                </div>
+                <span class="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800">
+                    {{ $successCount }}
+                </span>
+            </div>
+            
+            <div class="flex-1 p-0 flex flex-col items-center justify-center text-center p-8">
+                <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <h3 class="text-sm font-bold text-slate-900">Completed Profiles</h3>
+                <p class="mt-1 text-sm text-slate-500">Currently {{ $successCount }} user profiles have been successfully scraped with no pending retries.</p>
+            </div>
+        </div>
     </div>
     <style>
         .animate-fade-in-up {
@@ -143,6 +168,16 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
         }
     </style>
 </div>

@@ -2,6 +2,7 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 process.on('uncaughtException', (err) => {
     if (err.message && err.message.includes('Requesting main frame too early')) {
@@ -21,6 +22,15 @@ process.on('unhandledRejection', (reason, promise) => {
 puppeteer.use(StealthPlugin());
 
 (async () => {
+    let browser;
+    process.on('SIGTERM', async () => {
+        console.error(`[${new Date().toISOString()}] Received SIGTERM. Shutting down browser...`);
+        if (browser) {
+            await browser.close();
+        }
+        process.exit(0);
+    });
+
     const args = process.argv.slice(2);
     if (args.length === 0) {
         console.error(JSON.stringify({ status: 'failed', message: 'No input provided' }));
@@ -66,8 +76,8 @@ puppeteer.use(StealthPlugin());
             defaultViewport: null,
             env: {
                 ...process.env,
-                XDG_CONFIG_HOME: '/tmp',
-                XDG_CACHE_HOME: '/tmp'
+                XDG_CONFIG_HOME: os.tmpdir(),
+                XDG_CACHE_HOME: os.tmpdir()
             }
         };
         
@@ -86,13 +96,30 @@ puppeteer.use(StealthPlugin());
         
         if (process.env.PUPPETEER_EXECUTABLE_PATH) {
             launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+        } else {
+            const possibleChromePaths = [
+                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+                'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+                '/usr/bin/chromium',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/google-chrome'
+            ];
+            for (const p of possibleChromePaths) {
+                if (fs.existsSync(p)) {
+                    launchOptions.executablePath = p;
+                    break;
+                }
+            }
         }
 
-        const browser = await puppeteer.launch(launchOptions);
+        console.error(`[${new Date().toISOString()}] Launching browser...`);
+        browser = await puppeteer.launch(launchOptions);
+        console.error(`[${new Date().toISOString()}] Browser launched successfully.`);
         
         let allJobs = [];
 
         for (const query of searchQueries) {
+            console.error(`[${new Date().toISOString()}] Starting query: Role="${query.role}", Location="${query.location}" on ${platform}...`);
             let page;
             try {
                 page = await browser.newPage();

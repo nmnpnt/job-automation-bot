@@ -98,18 +98,5 @@ new class extends Component
 
     </div>
 
-    <!-- Bottom User Actions -->
-    <div class="p-4 border-t border-slate-800/60 bg-slate-900/30">
-        <!-- Profile -->
-        <a href="{{ route('profile') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-200 {{ request()->routeIs('profile') ? 'bg-indigo-500/10 text-indigo-400 font-semibold' : 'hover:bg-slate-800 hover:text-white' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Profile">
-            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('profile') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-            <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Profile') }}</span>
-        </a>
-
-        <!-- Logout -->
-        <button wire:click="logout" class="w-full group flex items-center py-2.5 rounded-xl transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 text-slate-400 mt-1" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Log Out">
-            <svg class="w-5 h-5 flex-shrink-0 group-hover:text-red-400" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-            <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Log Out') }}</span>
-        </button>
-    </div>
+    <!-- Bottom User Actions (Removed) -->
 </aside>

@@ -118,9 +118,15 @@
                                         </div>
                                     </div>
                                     @if (\App\Models\Profile::where('user_id', auth()->id())->first()?->resume_path)
-                                        <div class="mt-3 inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-500/10 text-xs font-bold text-emerald-700 border border-emerald-500/20 shadow-sm">
-                                            <svg class="w-4 h-4 mr-1.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            Resume active and ready
+                                        <div class="flex items-center space-x-3 mt-3">
+                                            <span class="text-sm font-medium text-emerald-600 flex items-center bg-emerald-50 px-3 py-1.5 rounded-full">
+                                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                Resume active and ready
+                                            </span>
+                                            <a href="{{ route('resume.view') }}" target="_blank" class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 focus:outline-none transition-all duration-200">
+                                                <svg class="h-3 w-3 mr-1 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                View Resume
+                                            </a>
                                         </div>
                                     @endif
                                     @error('resume') <span class="text-rose-500 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror

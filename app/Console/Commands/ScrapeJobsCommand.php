@@ -75,16 +75,36 @@ class ScrapeJobsCommand extends Command
                 $process->setTimeout(600); // 10 minutes max per platform
                 
                 try {
-                    $process->mustRun();
+                    $logFile = storage_path("logs/scraper-{$profile->user_id}.log");
+                    if (!file_exists(dirname($logFile))) {
+                        mkdir(dirname($logFile), 0755, true);
+                    }
+                    if ($platform === $platforms[0]) {
+                        file_put_contents($logFile, "Starting scraper run...\n");
+                    }
+                    file_put_contents($logFile, "Scraping {$platform}...\n", FILE_APPEND);
+
+                    $process->start();
+                    $profile->update(['scraper_pid' => $process->getPid()]);
+
+                    $outputBuffer = '';
+                    $process->wait(function ($type, $buffer) use ($logFile, &$outputBuffer) {
+                        if ($type === \Symfony\Component\Process\Process::ERR) {
+                            file_put_contents($logFile, $buffer, FILE_APPEND);
+                        } else {
+                            $outputBuffer .= $buffer;
+                        }
+                    });
+                    
                     if ($process->getErrorOutput()) {
                         $this->warn("Debug: " . $process->getErrorOutput());
                     }
-                    $output = $process->getOutput();
                     
                     // Parse output and save to database
-                    $result = json_decode($output, true);
+                    $result = json_decode($outputBuffer, true);
                     if (isset($result['status']) && $result['status'] === 'success' && isset($result['jobs'])) {
                         $this->info("Found " . count($result['jobs']) . " jobs.");
+                        file_put_contents($logFile, "Found " . count($result['jobs']) . " jobs on {$platform}.\n", FILE_APPEND);
                         foreach ($result['jobs'] as $jobData) {
                             $app = \App\Models\Application::updateOrCreate(
                                 [
@@ -101,21 +121,33 @@ class ScrapeJobsCommand extends Command
                                 ]
                             );
                             if ($app->wasRecentlyCreated) {
-                                event(new ActivityLogged($app, 'DISCOVERED', "New job discovered: {$jobData['title']} at {$jobData['company']} via {$platform}."));
-                                $profile->user->sendSlackNotification(
-                                    "New job discovered: {$jobData['title']} at {$jobData['company']} via {$platform}.",
-                                    'info',
-                                    'notify_on_external' // We can use notify_on_external for discovered jobs as a close match, or daily_summary
-                                );
+                                try {
+                                    event(new ActivityLogged($app, 'DISCOVERED', "New job discovered: {$jobData['title']} at {$jobData['company']} via {$platform}."));
+                                    $profile->user->sendSlackNotification(
+                                        "New job discovered: {$jobData['title']} at {$jobData['company']} via {$platform}.",
+                                        'info',
+                                        'notify_on_external'
+                                    );
+                                } catch (\Throwable $e) {
+                                    // Ignore broadcast / notification failures so jobs are still stored
+                                }
                             }
                         }
                     } else {
-                        $this->error("Failed to parse jobs: " . $output);
+                        $this->error("Failed to parse jobs: " . $outputBuffer);
+                        file_put_contents($logFile, "Failed to parse jobs: " . $outputBuffer . "\n", FILE_APPEND);
                     }
                 } catch (\Exception $e) {
                     $this->error("Scraper failed: " . $e->getMessage());
+                    $logFile = storage_path("logs/scraper-{$profile->user_id}.log");
+                    file_put_contents($logFile, "Scraper failed: " . $e->getMessage() . "\n", FILE_APPEND);
                 }
             }
+            
+            // Finished
+            $profile->update(['scraping_status' => 'completed', 'scraper_pid' => null]);
+            $logFile = storage_path("logs/scraper-{$profile->user_id}.log");
+            file_put_contents($logFile, "Scrape run completed.\n", FILE_APPEND);
         }
     }
 }

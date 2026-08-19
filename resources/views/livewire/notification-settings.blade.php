@@ -86,6 +86,17 @@
 
                             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all">
                                 <div>
+                                    <h4 class="text-sm font-bold text-gray-800">Interview Scheduled</h4>
+                                    <p class="text-xs text-gray-500 mt-0.5">Receive immediate high-priority alerts when an interview is requested or scheduled.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer ml-4">
+                                    <input type="checkbox" wire:model="notify_on_interview" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all">
+                                <div>
                                     <h4 class="text-sm font-bold text-gray-800">Already Applied</h4>
                                     <p class="text-xs text-gray-500 mt-0.5">Log an alert if the bot skips a job because you have already applied to it.</p>
                                 </div>
@@ -101,11 +112,12 @@
                 <!-- Channels Column -->
                 <div class="space-y-6">
                     <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 relative overflow-hidden group">
-                        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+                        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-500 via-emerald-500 to-pink-500"></div>
                         <h3 class="text-xl font-bold text-gray-800 mb-1 mt-1">Channels</h3>
-                        <p class="text-sm text-gray-500 mb-5">Choose how you want to receive these alerts.</p>
+                        <p class="text-sm text-gray-500 mb-5">Choose how you want to receive your alerts.</p>
                         
                         <div class="space-y-4">
+                            <!-- In-App -->
                             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                                 <div>
                                     <h4 class="text-sm font-bold text-gray-800">In-App Notifications</h4>
@@ -117,6 +129,7 @@
                                 </label>
                             </div>
 
+                            <!-- Slack -->
                             <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2">
@@ -133,10 +146,80 @@
                                     </label>
                                 </div>
                                 <div x-data="{ expanded: @entangle('channel_slack') }" x-show="expanded" x-collapse>
-                                    <div class="pt-3 border-t border-gray-200">
-                                        <label for="slack_url" class="block text-xs font-medium text-gray-700 mb-1">Slack Webhook URL</label>
-                                        <input type="text" id="slack_url" wire:model="slack_webhook_url" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-sm px-3 py-2 bg-white" placeholder="https://hooks.slack.com/services/...">
-                                        @error('slack_webhook_url') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                    <div class="pt-3 border-t border-gray-200 space-y-2">
+                                        <label for="slack_url" class="block text-xs font-medium text-gray-700">Slack Webhook URL</label>
+                                        <input type="text" id="slack_url" wire:model="slack_webhook_url" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 text-xs px-3 py-2 bg-white" placeholder="https://hooks.slack.com/services/...">
+                                        @error('slack_webhook_url') <span class="text-red-500 text-xs block">{{ $message }}</span> @enderror
+                                        
+                                        <div class="pt-1 flex items-center justify-between">
+                                            <button type="button" wire:click="testSlack" wire:loading.attr="disabled" class="inline-flex items-center text-xs font-semibold px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-all">
+                                                <span wire:loading.remove wire:target="testSlack">⚡ Send Test Slack Message</span>
+                                                <span wire:loading wire:target="testSlack">Sending...</span>
+                                            </button>
+                                        </div>
+                                        @if($testSlackStatus)
+                                            <div class="text-xs p-2 rounded-lg {{ $testSlackStatus['success'] ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700' }}">
+                                                {{ $testSlackStatus['message'] }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- WhatsApp Integration -->
+                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="p-1.5 bg-white rounded shadow-sm text-emerald-600">
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-gray-800">WhatsApp Alerts</h4>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer ml-4">
+                                        <input type="checkbox" wire:model="channel_whatsapp" class="sr-only peer">
+                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                                    </label>
+                                </div>
+                                <div x-data="{ expanded: @entangle('channel_whatsapp') }" x-show="expanded" x-collapse>
+                                    <div class="pt-3 border-t border-gray-200 space-y-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Provider</label>
+                                            <select wire:model="whatsapp_provider" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs px-3 py-2 bg-white">
+                                                <option value="callmebot">CallMeBot (Free WhatsApp API)</option>
+                                                <option value="custom_webhook">Custom Webhook / Gateway</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Phone Number (with Country Code)</label>
+                                            <input type="text" wire:model="whatsapp_phone_number" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs px-3 py-2 bg-white" placeholder="+919876543210">
+                                            @error('whatsapp_phone_number') <span class="text-red-500 text-xs block">{{ $message }}</span> @enderror
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">
+                                                {{ $whatsapp_provider === 'callmebot' ? 'CallMeBot API Key' : 'Webhook URL' }}
+                                            </label>
+                                            <input type="text" wire:model="whatsapp_api_key" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs px-3 py-2 bg-white" placeholder="{{ $whatsapp_provider === 'callmebot' ? 'Enter your CallMeBot API key' : 'https://api.twilio.com/...' }}">
+                                            @if($whatsapp_provider === 'callmebot')
+                                                <p class="text-[10px] text-gray-500 mt-1">Get your free key in 10s: Send "I allow callmebot to send me messages" on WhatsApp to <strong>+34 941 07 43 00</strong>.</p>
+                                            @endif
+                                            @error('whatsapp_api_key') <span class="text-red-500 text-xs block">{{ $message }}</span> @enderror
+                                        </div>
+
+                                        <div class="pt-1 flex items-center justify-between">
+                                            <button type="button" wire:click="testWhatsApp" wire:loading.attr="disabled" class="inline-flex items-center text-xs font-semibold px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg transition-all">
+                                                <span wire:loading.remove wire:target="testWhatsApp">💬 Send Test WhatsApp</span>
+                                                <span wire:loading wire:target="testWhatsApp">Sending...</span>
+                                            </button>
+                                        </div>
+                                        @if($testWhatsAppStatus)
+                                            <div class="text-xs p-2 rounded-lg {{ $testWhatsAppStatus['success'] ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700' }}">
+                                                {{ $testWhatsAppStatus['message'] }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

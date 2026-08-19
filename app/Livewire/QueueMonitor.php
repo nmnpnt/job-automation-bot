@@ -8,27 +8,28 @@ use Illuminate\Support\Facades\Artisan;
 
 class QueueMonitor extends Component
 {
-    public function retryJob($id)
+    public function retryJob($uuid)
     {
-        Artisan::call('queue:retry', ['id' => [$id]]);
+        Artisan::call('queue:retry', ['id' => [$uuid]]);
         session()->flash('message', 'Job retried successfully.');
     }
 
-    public function deleteFailedJob($id)
+    public function deleteFailedJob($uuid)
     {
-        Artisan::call('queue:forget', ['id' => [$id]]);
+        Artisan::call('queue:forget', ['id' => [$uuid]]);
         session()->flash('message', 'Failed job deleted.');
     }
 
     public function render()
     {
-        // For standard Laravel jobs table
         $pendingJobs = DB::table('jobs')->orderBy('id', 'asc')->get();
         $failedJobs = DB::table('failed_jobs')->orderBy('failed_at', 'desc')->get();
+        $successCount = \App\Models\Profile::where('scraping_status', 'completed')->count();
 
         return view('livewire.queue-monitor', [
             'pendingJobs' => $pendingJobs,
-            'failedJobs' => $failedJobs
+            'failedJobs' => $failedJobs,
+            'successCount' => $successCount
         ])->layout('layouts.app');
     }
 }

@@ -52,8 +52,32 @@ class User extends Authenticatable
         $prefs = $this->notificationPreferences;
         if ($prefs && $prefs->channel_slack && $prefs->slack_webhook_url) {
             if (!$prefKey || $prefs->{$prefKey}) {
-                $this->notify(new \App\Notifications\SystemSlackNotification($message, $type));
+                try {
+                    $this->notify(new \App\Notifications\SystemSlackNotification($message, $type));
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("Slack notification error: " . $e->getMessage());
+                }
             }
         }
+    }
+
+    public function sendWhatsAppNotification(string $message, ?string $prefKey = null): void
+    {
+        $prefs = $this->notificationPreferences;
+        if ($prefs && $prefs->channel_whatsapp) {
+            if (!$prefKey || $prefs->{$prefKey}) {
+                try {
+                    app(\App\Services\WhatsAppService::class)->send($this, $message);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error("WhatsApp notification error: " . $e->getMessage());
+                }
+            }
+        }
+    }
+
+    public function notifyChannels(string $message, string $type = 'info', ?string $prefKey = null): void
+    {
+        $this->sendSlackNotification($message, $type, $prefKey);
+        $this->sendWhatsAppNotification($message, $prefKey);
     }
 }

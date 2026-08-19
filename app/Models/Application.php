@@ -19,6 +19,7 @@ class Application extends Model
         'can_auto_apply' => 'boolean',
         'submitted_at' => 'datetime',
         'last_attempt_at' => 'datetime',
+        'interview_scheduled_at' => 'datetime',
     ];
 
     public function events()
