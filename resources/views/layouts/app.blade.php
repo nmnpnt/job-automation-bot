@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-slate-50">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full bg-slate-50 transition-colors duration-500">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,7 +14,7 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        
+
         <style>
             body { font-family: 'Inter', sans-serif; }
             [x-cloak] { display: none !important; }
@@ -40,7 +40,18 @@
             }
         </style>
     </head>
-    <body class="h-full antialiased text-slate-800 overflow-hidden" x-data="{ sidebarOpen: true, mobileSidebarOpen: false }">
+    <body class="h-full antialiased text-slate-800 bg-slate-50 transition-colors duration-500 overflow-hidden" 
+          x-data="{ 
+              sidebarOpen: true, 
+              mobileSidebarOpen: false
+          }">
+        
+        <!-- Animated Background Mesh Gradient -->
+        <div class="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
+            <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-400/20 rounded-full blur-[100px] -mr-32 -mt-32 mix-blend-multiply animate-pulse" style="animation-duration: 8s;"></div>
+            <div class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-400/20 rounded-full blur-[120px] -ml-32 -mb-32 mix-blend-multiply animate-pulse" style="animation-duration: 10s; animation-direction: reverse;"></div>
+            <div class="absolute top-1/2 left-1/2 w-[800px] h-[800px] bg-purple-400/10 rounded-full blur-[150px] transform -translate-x-1/2 -translate-y-1/2 mix-blend-multiply pointer-events-none"></div>
+        </div>
         
         <!-- Mobile Sidebar Backdrop -->
         <div x-show="mobileSidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-slate-900/80 backdrop-blur-sm lg:hidden" @click="mobileSidebarOpen = false" x-cloak></div>

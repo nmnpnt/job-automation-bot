@@ -75,6 +75,12 @@ new class extends Component
             <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Settings') }}</span>
         </a>
 
+        <!-- System Logs -->
+        <a href="{{ route('logs') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-200 {{ request()->routeIs('logs') ? 'bg-indigo-500/10 text-indigo-400 font-semibold' : 'hover:bg-slate-800 hover:text-white' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="System Logs">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('logs') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('System Logs') }}</span>
+        </a>
+
         <!-- Queue Monitor -->
         <a href="{{ route('queue-monitor') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-200 {{ request()->routeIs('queue-monitor') ? 'bg-indigo-500/10 text-indigo-400 font-semibold' : 'hover:bg-slate-800 hover:text-white' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Queue Monitor">
             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('queue-monitor') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -96,7 +102,7 @@ new class extends Component
             <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Architecture') }}</span>
         </a>
 
+
     </div>
 
-    <!-- Bottom User Actions (Removed) -->
 </aside>

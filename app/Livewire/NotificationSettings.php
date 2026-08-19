@@ -91,7 +91,10 @@ class NotificationSettings extends Component
         }
 
         try {
+            // Force enable the channel when testing so the test actually goes through
+            $this->channel_slack = true;
             $this->save();
+            
             auth()->user()->sendSlackNotification("🔔 *Test Notification* from your Job Automation Bot! Slack integration is working perfectly.");
             $this->testSlackStatus = ['success' => true, 'message' => 'Test message sent to Slack! Check your channel.'];
         } catch (\Throwable $e) {
@@ -108,6 +111,8 @@ class NotificationSettings extends Component
         }
 
         try {
+            // Force enable the channel when testing so the test actually goes through
+            $this->channel_whatsapp = true;
             $this->save();
             $sent = app(\App\Services\WhatsAppService::class)->send(
                 auth()->user(),

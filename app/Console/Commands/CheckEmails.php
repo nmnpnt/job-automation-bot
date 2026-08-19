@@ -91,13 +91,13 @@ class CheckEmails extends Command
                             event(new ActivityLogged($app, $status->value, $msg));
                             
                             if (in_array($status->value, ['INTERVIEW_REQUESTED', 'OFFER_RECEIVED'])) {
-                                $app->user->sendSlackNotification(
+                                $app->user->notifyChannels(
                                     $msg . " - " . $app->company_name,
                                     'success',
                                     'notify_on_interview'
                                 );
                             } elseif ($status->value === 'REJECTED') {
-                                $app->user->sendSlackNotification(
+                                $app->user->notifyChannels(
                                     $msg . " - " . $app->company_name,
                                     'error'
                                 );

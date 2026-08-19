@@ -186,6 +186,19 @@
                                         @error('remote_preference') <span class="text-rose-500 text-xs mt-1 absolute -bottom-5 left-1 font-medium">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
+
+                                <div class="relative group/input mt-4">
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 transition-colors group-focus-within/input:text-indigo-600">Target Platforms</label>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        @foreach(['LINKEDIN', 'INDEED', 'NAUKRI', 'UPLERS', 'UNSTOP', 'HIRIST', 'CUTSHORT'] as $platform)
+                                        <label class="relative flex items-center p-3 rounded-2xl border border-slate-200/60 bg-white/80 cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-300 transition-all duration-200 has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-500 has-[:checked]:ring-1 has-[:checked]:ring-indigo-500">
+                                            <input type="checkbox" wire:model="target_platforms" value="{{ $platform }}" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
+                                            <span class="ml-3 text-sm font-bold text-slate-700">{{ ucfirst(strtolower($platform)) }}</span>
+                                        </label>
+                                        @endforeach
+                                    </div>
+                                    @error('target_platforms') <span class="text-rose-500 text-xs mt-2 block font-medium">{{ $message }}</span> @enderror
+                                </div>
                             </div>
                         </div>
 

@@ -2,14 +2,11 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Slack\SlackMessage;
 
-class SystemSlackNotification extends Notification implements ShouldQueue
+class SystemNotification extends Notification
 {
-    use Queueable;
 
     public $message;
     public $type;
@@ -27,17 +24,14 @@ class SystemSlackNotification extends Notification implements ShouldQueue
 
     /**
      * Get the notification's delivery channels.
+     * Only delivers to the database (in-app notification bell).
+     * Slack is sent directly in User::sendSlackNotification() to avoid SSL issues.
      *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
     {
-        // Only send if the user has Slack notifications enabled and a webhook URL is configured.
-        if ($notifiable->notificationPreferences && $notifiable->notificationPreferences->channel_slack && $notifiable->notificationPreferences->slack_webhook_url) {
-            return ['slack'];
-        }
-
-        return [];
+        return ['database'];
     }
 
     /**
@@ -45,18 +39,17 @@ class SystemSlackNotification extends Notification implements ShouldQueue
      */
     public function toSlack(object $notifiable): SlackMessage
     {
-        $colors = [
-            'info' => 'good',
-            'success' => 'good',
-            'warning' => 'warning',
-            'error' => 'danger',
+        $emojis = [
+            'info' => 'ℹ️',
+            'success' => '✅',
+            'warning' => '⚠️',
+            'error' => '🚨',
         ];
 
-        $color = $colors[$this->type] ?? 'good';
+        $emoji = $emojis[$this->type] ?? 'ℹ️';
 
         $slack = (new SlackMessage)
-            ->text($this->message)
-            ->color($color);
+            ->text("{$emoji} " . $this->message);
 
         if (!empty($this->data)) {
             // Optional: attach data fields if present
@@ -64,5 +57,17 @@ class SystemSlackNotification extends Notification implements ShouldQueue
         }
 
         return $slack;
+    }
+
+    /**
+     * Get the array representation of the notification.
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'message' => $this->message,
+            'type' => $this->type,
+            'data' => $this->data,
+        ];
     }
 }

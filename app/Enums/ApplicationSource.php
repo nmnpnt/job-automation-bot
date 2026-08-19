@@ -12,6 +12,7 @@ enum ApplicationSource: string
     case LEVER = 'LEVER';
     case WORKDAY = 'WORKDAY';
     case LINKEDIN = 'LINKEDIN';
+    case INDEED = 'INDEED';
     case NAUKRI = 'NAUKRI';
     case UPLERS = 'UPLERS';
     case UNSTOP = 'UNSTOP';

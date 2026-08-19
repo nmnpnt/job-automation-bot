@@ -1,4 +1,4 @@
-<div class="py-6 bg-gray-50 min-h-screen">
+<div class="py-6 min-h-screen transition-colors duration-300">
     <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="relative rounded-2xl overflow-hidden mb-8 bg-gradient-to-r from-teal-500 via-emerald-500 to-green-600 shadow-md">
@@ -22,87 +22,87 @@
                 <!-- Event Triggers Column -->
                 <div class="lg:col-span-2 space-y-6">
                     
-                    <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 relative overflow-hidden group">
+                    <div class="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl shadow-slate-200/40 border border-white/50 relative overflow-hidden group transition-colors duration-300">
                         <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-blue-500 to-indigo-600"></div>
                         <h3 class="text-xl font-bold text-gray-800 mb-1">Event Triggers</h3>
                         <p class="text-sm text-gray-500 mb-5">Select the specific events you want the bot to notify you about.</p>
                         
                         <div class="space-y-3">
                             <!-- Toggle Item -->
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all duration-300">
                                 <div>
                                     <h4 class="text-sm font-bold text-gray-800">Auto-Application Submitted</h4>
                                     <p class="text-xs text-gray-500 mt-0.5">Get alerted instantly when the bot successfully submits an application.</p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer ml-4">
                                     <input type="checkbox" wire:model="notify_on_submitted" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300:border-slate-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                                 </label>
                             </div>
 
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all duration-300">
                                 <div>
                                     <h4 class="text-sm font-bold text-gray-800">Redirected to External Board</h4>
                                     <p class="text-xs text-gray-500 mt-0.5">Alert me if a job posting links out to another site (e.g., Workday).</p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer ml-4">
                                     <input type="checkbox" wire:model="notify_on_external" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300:border-slate-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                                 </label>
                             </div>
 
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all duration-300">
                                 <div>
                                     <h4 class="text-sm font-bold text-gray-800">Company Website Application</h4>
                                     <p class="text-xs text-gray-500 mt-0.5">Notify me if the bot encounters a direct company careers page.</p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer ml-4">
                                     <input type="checkbox" wire:model="notify_on_company_website" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300:border-slate-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                                 </label>
                             </div>
 
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all duration-300">
                                 <div>
                                     <h4 class="text-sm font-bold text-gray-800">Manual Intervention Required</h4>
                                     <p class="text-xs text-gray-500 mt-0.5">Alert me if a captcha, custom assessment, or unhandled question blocks the bot.</p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer ml-4">
                                     <input type="checkbox" wire:model="notify_on_manual_required" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300:border-slate-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                                 </label>
                             </div>
 
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all duration-300">
                                 <div>
                                     <h4 class="text-sm font-bold text-gray-800">Application Failed</h4>
                                     <p class="text-xs text-gray-500 mt-0.5">Get notified if the bot encounters a crash or error while applying.</p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer ml-4">
                                     <input type="checkbox" wire:model="notify_on_failed" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300:ring-red-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300:border-slate-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
                                 </label>
                             </div>
 
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all duration-300">
                                 <div>
                                     <h4 class="text-sm font-bold text-gray-800">Interview Scheduled</h4>
                                     <p class="text-xs text-gray-500 mt-0.5">Receive immediate high-priority alerts when an interview is requested or scheduled.</p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer ml-4">
                                     <input type="checkbox" wire:model="notify_on_interview" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300:border-slate-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                                 </label>
                             </div>
 
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-all duration-300">
                                 <div>
                                     <h4 class="text-sm font-bold text-gray-800">Already Applied</h4>
                                     <p class="text-xs text-gray-500 mt-0.5">Log an alert if the bot skips a job because you have already applied to it.</p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer ml-4">
                                     <input type="checkbox" wire:model="notify_on_duplicate" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300:border-slate-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                                 </label>
                             </div>
                         </div>
@@ -111,26 +111,26 @@
 
                 <!-- Channels Column -->
                 <div class="space-y-6">
-                    <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 relative overflow-hidden group">
+                    <div class="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl shadow-slate-200/40 border border-white/50 relative overflow-hidden group transition-colors duration-300">
                         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-500 via-emerald-500 to-pink-500"></div>
                         <h3 class="text-xl font-bold text-gray-800 mb-1 mt-1">Channels</h3>
                         <p class="text-sm text-gray-500 mb-5">Choose how you want to receive your alerts.</p>
                         
                         <div class="space-y-4">
                             <!-- In-App -->
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 transition-colors duration-300">
                                 <div>
                                     <h4 class="text-sm font-bold text-gray-800">In-App Notifications</h4>
                                     <p class="text-xs text-gray-500 mt-0.5">Show alerts in the Live Activity Feed.</p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer ml-4">
                                     <input type="checkbox" wire:model="channel_in_app" class="sr-only peer">
-                                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300:border-slate-500 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
                                 </label>
                             </div>
 
                             <!-- Slack -->
-                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3 transition-colors duration-300">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2">
                                         <div class="p-1.5 bg-white rounded shadow-sm">
@@ -142,7 +142,7 @@
                                     </div>
                                     <label class="relative inline-flex items-center cursor-pointer ml-4">
                                         <input type="checkbox" wire:model="channel_slack" class="sr-only peer">
-                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#4A154B]"></div>
+                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300:border-slate-500 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#4A154B]"></div>
                                     </label>
                                 </div>
                                 <div x-data="{ expanded: @entangle('channel_slack') }" x-show="expanded" x-collapse>
@@ -152,9 +152,12 @@
                                         @error('slack_webhook_url') <span class="text-red-500 text-xs block">{{ $message }}</span> @enderror
                                         
                                         <div class="pt-1 flex items-center justify-between">
-                                            <button type="button" wire:click="testSlack" wire:loading.attr="disabled" class="inline-flex items-center text-xs font-semibold px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-all">
+                                            <button type="button" wire:click="testSlack" wire:loading.attr="disabled" class="inline-flex items-center justify-center text-xs font-semibold px-3 py-1.5 bg-gray-200 hover:bg-gray-300:bg-slate-500 text-gray-800 rounded-lg transition-all duration-300 shadow-sm border border-transparent">
                                                 <span wire:loading.remove wire:target="testSlack">⚡ Send Test Slack Message</span>
-                                                <span wire:loading wire:target="testSlack">Sending...</span>
+                                                <span wire:loading wire:target="testSlack" class="flex items-center">
+                                                    <svg class="animate-spin -ml-1 mr-2 h-3.5 w-3.5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                    Sending...
+                                                </span>
                                             </button>
                                         </div>
                                         @if($testSlackStatus)
@@ -167,7 +170,7 @@
                             </div>
 
                             <!-- WhatsApp Integration -->
-                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3">
+                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3 transition-colors duration-300">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center space-x-2">
                                         <div class="p-1.5 bg-white rounded shadow-sm text-emerald-600">
@@ -179,7 +182,7 @@
                                     </div>
                                     <label class="relative inline-flex items-center cursor-pointer ml-4">
                                         <input type="checkbox" wire:model="channel_whatsapp" class="sr-only peer">
-                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300:ring-emerald-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300:border-slate-500 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
                                     </label>
                                 </div>
                                 <div x-data="{ expanded: @entangle('channel_whatsapp') }" x-show="expanded" x-collapse>
@@ -204,15 +207,18 @@
                                             </label>
                                             <input type="text" wire:model="whatsapp_api_key" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-xs px-3 py-2 bg-white" placeholder="{{ $whatsapp_provider === 'callmebot' ? 'Enter your CallMeBot API key' : 'https://api.twilio.com/...' }}">
                                             @if($whatsapp_provider === 'callmebot')
-                                                <p class="text-[10px] text-gray-500 mt-1">Get your free key in 10s: Send "I allow callmebot to send me messages" on WhatsApp to <strong>+34 941 07 43 00</strong>.</p>
+                                                <p class="text-[10px] text-gray-500 mt-1">Get your free key in 10s: Send "I allow callmebot to send me messages" on WhatsApp to <strong class="">+34 941 07 43 00</strong>.</p>
                                             @endif
                                             @error('whatsapp_api_key') <span class="text-red-500 text-xs block">{{ $message }}</span> @enderror
                                         </div>
 
                                         <div class="pt-1 flex items-center justify-between">
-                                            <button type="button" wire:click="testWhatsApp" wire:loading.attr="disabled" class="inline-flex items-center text-xs font-semibold px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg transition-all">
+                                            <button type="button" wire:click="testWhatsApp" wire:loading.attr="disabled" class="inline-flex items-center justify-center text-xs font-semibold px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200:bg-emerald-900/60 text-emerald-800 rounded-lg transition-all duration-300 shadow-sm border border-transparent">
                                                 <span wire:loading.remove wire:target="testWhatsApp">💬 Send Test WhatsApp</span>
-                                                <span wire:loading wire:target="testWhatsApp">Sending...</span>
+                                                <span wire:loading wire:target="testWhatsApp" class="flex items-center">
+                                                    <svg class="animate-spin -ml-1 mr-2 h-3.5 w-3.5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                    Sending...
+                                                </span>
                                             </button>
                                         </div>
                                         @if($testWhatsAppStatus)
@@ -228,13 +234,17 @@
                     </div>
 
                     <!-- Save Action -->
-                    <div class="bg-white rounded-2xl p-5 shadow-md border border-gray-100 flex items-center justify-between">
+                    <div class="bg-white/80 backdrop-blur-xl rounded-2xl p-5 shadow-xl shadow-slate-200/40 border border-white/50 flex items-center justify-between transition-colors duration-300">
                         <div class="flex items-center space-x-2 text-emerald-600 font-medium text-sm" x-data="{ show: @entangle('saved') }" x-show="show" x-init="$watch('show', value => { if(value) setTimeout(() => $wire.set('saved', false), 3000) })" x-transition>
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                             <span>Settings Saved</span>
                         </div>
-                        <button type="submit" class="ml-auto inline-flex justify-center rounded-lg border border-transparent bg-indigo-600 py-2.5 px-6 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all">
-                            Save Preferences
+                        <button type="submit" wire:loading.attr="disabled" class="ml-auto inline-flex justify-center items-center rounded-lg border border-transparent bg-indigo-600 py-2.5 px-6 text-sm font-bold text-white shadow-md hover:shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2:ring-offset-slate-800 transition-all duration-300 disabled:opacity-75 disabled:cursor-not-allowed">
+                            <span wire:loading.remove wire:target="save">Save Preferences</span>
+                            <span wire:loading wire:target="save" class="flex items-center">
+                                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Saving...
+                            </span>
                         </button>
                     </div>
                 </div>

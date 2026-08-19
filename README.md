@@ -70,9 +70,15 @@ GEMINI_API_KEY="your-gemini-api-key-here"
 
 # Notification Channels (Optional)
 SLACK_WEBHOOK_URL="..."
+CALLMEBOT_PHONE="..."
+CALLMEBOT_API_KEY="..."
 ```
 
-### 3. Running the Stack
+### 3. Monitoring & Logs
+- **Queue Monitor**: View real-time job queues and exception traces for failed scraper jobs at `/queue-monitor`.
+- **System Logs**: View Laravel backend and scraper logs directly from the UI at `/logs`.
+
+### 4. Running the Stack
 You will need **four** separate terminal tabs running concurrently to develop locally:
 
 **Terminal 1: Web Server**

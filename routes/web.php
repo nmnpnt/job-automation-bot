@@ -12,6 +12,14 @@ Route::get('jobs', \App\Livewire\JobsList::class)
     ->middleware(['auth', 'verified'])
     ->name('jobs.index');
 
+Route::get('/jobs/{jobId}', \App\Livewire\JobDetails::class)
+    ->middleware(['auth', 'verified'])
+    ->name('jobs.show');
+
+Route::get('interviews', \App\Livewire\InterviewsList::class)
+    ->middleware(['auth', 'verified'])
+    ->name('interviews.index');
+
 Route::get('queue-monitor', \App\Livewire\QueueMonitor::class)
     ->middleware(['auth', 'verified'])
     ->name('queue-monitor');
@@ -35,6 +43,15 @@ Route::get('activity', \App\Livewire\LiveActivityFeed::class)
 Route::get('settings', \App\Livewire\NotificationSettings::class)
     ->middleware(['auth', 'verified'])
     ->name('settings');
+
+Route::post('/notifications/mark-all-read', function (Illuminate\Http\Request $request) {
+    $request->user()->unreadNotifications->markAsRead();
+    return response()->json(['success' => true]);
+})->middleware(['auth'])->name('notifications.markAllRead');
+
+Route::get('logs', \App\Livewire\LogViewer::class)
+    ->middleware(['auth', 'verified'])
+    ->name('logs');
 
 Route::view('profile', 'profile')
     ->middleware(['auth'])

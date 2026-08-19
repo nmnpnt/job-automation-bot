@@ -21,7 +21,7 @@ class JobsList extends Component
     public $isAnalyzing = false;
     public $isPreparing = false;
 
-    public function updatedFilterSource()
+    public function updatingFilterSource()
     {
         $this->resetPage();
     }
@@ -108,6 +108,7 @@ class JobsList extends Component
     public $schedulingJobId = null;
     public $interview_scheduled_at = '';
     public $interview_type = 'Technical Interview';
+    public $interview_round = 'Round 1';
     public $interview_meeting_link = '';
     public $interview_notes = '';
 
@@ -118,6 +119,7 @@ class JobsList extends Component
         
         $this->interview_scheduled_at = $job->interview_scheduled_at ? $job->interview_scheduled_at->format('Y-m-d\TH:i') : now()->addDays(2)->format('Y-m-d\T10:00');
         $this->interview_type = $job->interview_type ?? 'Technical Interview';
+        $this->interview_round = $job->interview_round ?? 'Round 1';
         $this->interview_meeting_link = $job->interview_meeting_link ?? '';
         $this->interview_notes = $job->interview_notes ?? '';
 
@@ -129,32 +131,47 @@ class JobsList extends Component
         $this->validate([
             'interview_scheduled_at' => 'required|date',
             'interview_type' => 'required|string',
+            'interview_round' => 'required|string',
             'interview_meeting_link' => 'nullable|url',
             'interview_notes' => 'nullable|string',
         ]);
 
         try {
             $job = Application::findOrFail($this->schedulingJobId);
+
+            // Prevent duplicate interview round
+            $duplicate = $job->events()
+                ->where('event_type', 'INTERVIEW_SCHEDULED')
+                ->where('message', 'like', "%Round: {$this->interview_round}%")
+                ->exists();
+
+            if ($duplicate) {
+                $this->dispatch('notify', ['message' => "An interview for {$this->interview_round} is already scheduled.", 'type' => 'error']);
+                return;
+            }
+
             $formattedDate = \Carbon\Carbon::parse($this->interview_scheduled_at)->format('M d, Y h:i A');
 
             $job->update([
                 'status' => 'INTERVIEW_REQUESTED',
                 'interview_scheduled_at' => $this->interview_scheduled_at,
                 'interview_type' => $this->interview_type,
+                'interview_round' => $this->interview_round,
                 'interview_meeting_link' => $this->interview_meeting_link,
                 'interview_notes' => $this->interview_notes,
             ]);
 
             $job->events()->create([
                 'event_type' => 'INTERVIEW_SCHEDULED',
-                'message' => "Interview scheduled for {$formattedDate} ({$this->interview_type})."
+                'message' => "Interview scheduled for {$formattedDate} ({$this->interview_type}). Round: {$this->interview_round}"
             ]);
 
             // Dispatch alert to Slack and WhatsApp
             $alertMsg = "📅 *Interview Scheduled!*
 Job: *{$job->job_title}* at *{$job->company_name}*
 Time: *{$formattedDate}*
-Round: {$this->interview_type}" . ($this->interview_meeting_link ? "\nLink: {$this->interview_meeting_link}" : "");
+Type: {$this->interview_type}
+Round: {$this->interview_round}" . ($this->interview_meeting_link ? "\nLink: {$this->interview_meeting_link}" : "");
 
             auth()->user()->notifyChannels($alertMsg, 'success', 'notify_on_interview');
 
@@ -169,6 +186,12 @@ Round: {$this->interview_type}" . ($this->interview_meeting_link ? "\nLink: {$th
     {
         try {
             $job = Application::findOrFail($jobId);
+
+            if ($job->status !== \App\Enums\ApplicationStatus::DISCOVERED && $job->status !== \App\Enums\ApplicationStatus::MATCHED) {
+                $this->dispatch('notify', ['message' => 'Job is already marked as applied or further along.', 'type' => 'error']);
+                return;
+            }
+
             $job->update([
                 'status' => 'APPLIED',
                 'submitted_at' => now(),
@@ -212,6 +235,13 @@ Round: {$this->interview_type}" . ($this->interview_meeting_link ? "\nLink: {$th
         $this->dispatch('open-modal', 'interview-prep-modal');
     }
 
+    public $filterStatus = '';
+
+    public function updatingFilterStatus()
+    {
+        $this->resetPage();
+    }
+
     #[On('echo:activity-feed,.ActivityLogged')]
     public function refreshList()
     {
@@ -231,11 +261,34 @@ Round: {$this->interview_type}" . ($this->interview_meeting_link ? "\nLink: {$th
             $query->where('application_source', $this->filterSource);
         }
 
+        if ($this->filterStatus) {
+            $query->where('status', $this->filterStatus);
+        }
+
         $jobs = $query->paginate(20);
+
+        // Define the specific job portals requested by the user
+        $curatedSources = [
+            \App\Enums\ApplicationSource::LINKEDIN,
+            \App\Enums\ApplicationSource::INDEED,
+            \App\Enums\ApplicationSource::NAUKRI,
+            \App\Enums\ApplicationSource::UPLERS,
+            \App\Enums\ApplicationSource::UNSTOP,
+            \App\Enums\ApplicationSource::HIRIST,
+            \App\Enums\ApplicationSource::CUTSHORT,
+        ];
+
+        // Optional: you can fetch available statuses too
+        $availableStatusValues = Application::where('user_id', $userId)
+            ->whereNotNull('status')
+            ->distinct()
+            ->pluck('status')
+            ->toArray();
 
         return view('livewire.jobs-list', [
             'jobs' => $jobs,
-            'sources' => ApplicationSource::cases()
+            'sources' => $curatedSources,
+            'statuses' => $availableStatusValues
         ])->layout('layouts.app');
     }
 }

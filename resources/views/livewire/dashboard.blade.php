@@ -114,7 +114,7 @@
                     <p class="text-xs text-purple-200">Stay prepared for your upcoming technical and behavioral rounds.</p>
                 </div>
             </div>
-            <a href="{{ route('jobs.index') }}" class="text-xs font-bold bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl transition-colors backdrop-blur-md">
+            <a href="{{ route('interviews.index') }}" wire:navigate class="text-xs font-bold bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl transition-colors backdrop-blur-md">
                 Manage All
             </a>
         </div>

@@ -41,10 +41,20 @@ class ScrapeJobsCommand extends Command
             return;
         }
 
-        $platforms = $platformArg ? [strtoupper($platformArg)] : ['LINKEDIN', 'INDEED', 'NAUKRI', 'UPLERS', 'UNSTOP', 'HIRIST', 'CUTSHORT'];
-
         foreach ($profiles as $profile) {
             $this->info("Processing User ID: {$profile->user_id}");
+            
+            $platforms = $platformArg ? [strtoupper($platformArg)] : 
+                (is_array($profile->target_platforms) && count($profile->target_platforms) > 0 
+                    ? $profile->target_platforms 
+                    : ['LINKEDIN', 'INDEED', 'NAUKRI', 'UPLERS', 'UNSTOP', 'HIRIST', 'CUTSHORT']);
+
+            $platformList = implode(', ', $platforms);
+            $this->info("Targeting platforms: {$platformList}");
+            
+            try {
+                $profile->user->notifyChannels("🔍 Job scraping started on: {$platformList}", 'info', 'notify_on_system');
+            } catch (\Throwable $e) {}
             
             $prefs = [
                 'target_roles' => $profile->target_roles,
@@ -52,6 +62,8 @@ class ScrapeJobsCommand extends Command
                 'remote_preference' => $profile->remote_preference,
                 'max_job_age_days' => $profile->max_job_age_days,
             ];
+
+            $totalNewJobs = 0; // Track new jobs across all platforms this run
 
             foreach ($platforms as $platform) {
                 $sessionDir = storage_path("app/bot-sessions/{$profile->user_id}/" . strtolower($platform));
@@ -103,6 +115,7 @@ class ScrapeJobsCommand extends Command
                     // Parse output and save to database
                     $result = json_decode($outputBuffer, true);
                     if (isset($result['status']) && $result['status'] === 'success' && isset($result['jobs'])) {
+                        $newForPlatform = 0;
                         $this->info("Found " . count($result['jobs']) . " jobs.");
                         file_put_contents($logFile, "Found " . count($result['jobs']) . " jobs on {$platform}.\n", FILE_APPEND);
                         foreach ($result['jobs'] as $jobData) {
@@ -114,24 +127,23 @@ class ScrapeJobsCommand extends Command
                                 [
                                     'job_title' => $jobData['title'],
                                     'company_name' => $jobData['company'],
-                                    // Location could go into a new column, or just be logged
                                     'status' => 'DISCOVERED',
                                     'application_source' => $platform,
                                     'can_auto_apply' => true
                                 ]
                             );
                             if ($app->wasRecentlyCreated) {
+                                $newForPlatform++;
                                 try {
-                                    event(new ActivityLogged($app, 'DISCOVERED', "New job discovered: {$jobData['title']} at {$jobData['company']} via {$platform}."));
-                                    $profile->user->sendSlackNotification(
-                                        "New job discovered: {$jobData['title']} at {$jobData['company']} via {$platform}.",
-                                        'info',
-                                        'notify_on_external'
-                                    );
-                                } catch (\Throwable $e) {
-                                    // Ignore broadcast / notification failures so jobs are still stored
-                                }
+                                    // Fire live-feed event (no in-app notification per job — summary sent at end)
+                                    event(new \App\Events\ActivityLogged($app, 'DISCOVERED', "New job discovered: {$jobData['title']} at {$jobData['company']} via {$platform}."));
+                                } catch (\Throwable $e) {}
                             }
+                        }
+                        $totalNewJobs += $newForPlatform;
+                        if ($newForPlatform > 0) {
+                            $this->info("  → {$newForPlatform} new jobs saved from {$platform}.");
+                            file_put_contents($logFile, "  → {$newForPlatform} new jobs saved from {$platform}.\n", FILE_APPEND);
                         }
                     } else {
                         $this->error("Failed to parse jobs: " . $outputBuffer);
@@ -144,10 +156,18 @@ class ScrapeJobsCommand extends Command
                 }
             }
             
-            // Finished
+            // Finished — send a single summary notification
             $profile->update(['scraping_status' => 'completed', 'scraper_pid' => null]);
             $logFile = storage_path("logs/scraper-{$profile->user_id}.log");
-            file_put_contents($logFile, "Scrape run completed.\n", FILE_APPEND);
+            file_put_contents($logFile, "Scrape run completed. {$totalNewJobs} new jobs found.\n", FILE_APPEND);
+            
+            $summary = $totalNewJobs > 0
+                ? "✅ Scraping done on {$platformList}. {$totalNewJobs} new job(s) found!"
+                : "✅ Scraping done on {$platformList}. No new jobs this time.";
+
+            try {
+                $profile->user->notifyChannels($summary, 'success', 'notify_on_system');
+            } catch (\Throwable $e) {}
         }
     }
 }

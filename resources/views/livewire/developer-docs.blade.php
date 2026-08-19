@@ -131,7 +131,17 @@
                         </div>
                         <div>
                             <h4 class="text-lg font-bold text-white">Notification & Event Dispatch</h4>
-                            <p>Once a process succeeds, fails, or completes, it checks `NotificationPreference` and dispatches alerts via a global `sendSlackNotification` helper. It also triggers `ActivityLogged` events that are broadcasted via WebSockets (Laravel Reverb) to the dashboard's live feed.</p>
+                            <p>Once a process succeeds, fails, or completes, it checks `NotificationPreference` and dispatches alerts via a global `notifyChannels` logic (supporting Slack Webhooks and CallMeBot WhatsApp). It also triggers `ActivityLogged` events that are broadcasted via WebSockets (Laravel Reverb) to the dashboard's live feed.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex">
+                        <div class="flex-shrink-0 mr-4 mt-1">
+                            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-cyan-500 text-white font-bold">5</span>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-bold text-white">Monitoring & Logs</h4>
+                            <p>Queue workers monitor the queue and run tasks asynchronously. Any errors are caught and logged into `storage/logs/laravel.log`. The `LogViewer` allows reading these files and Node.js scraper logs directly from the frontend.</p>
                         </div>
                     </div>
                 </div>

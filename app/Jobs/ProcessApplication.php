@@ -6,7 +6,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use App\Models\Application;
 use App\Events\ActivityLogged;
-use App\Notifications\SystemSlackNotification;
+use App\Notifications\SystemNotification;
 
 class ProcessApplication implements ShouldQueue
 {
@@ -122,7 +122,7 @@ class ProcessApplication implements ShouldQueue
         
         if ($prefs && $prefs->channel_slack && $prefs->slack_webhook_url) {
             if (!$prefKey || $prefs->{$prefKey}) {
-                $this->application->user->notify(new SystemSlackNotification(
+                $this->application->user->notify(new SystemNotification(
                     "[{$status}] {$this->application->job_title} at {$this->application->company_name}: {$message}",
                     $slackType
                 ));

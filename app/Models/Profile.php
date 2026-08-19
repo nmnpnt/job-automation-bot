@@ -23,6 +23,11 @@ class Profile extends Model
         'max_job_age_days',
         'scraping_status',
         'last_scraped_at',
+        'target_platforms',
+    ];
+
+    protected $casts = [
+        'target_platforms' => 'array',
     ];
 
     public function user()

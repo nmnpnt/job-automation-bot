@@ -17,9 +17,12 @@ class Application extends Model
         'application_source' => ApplicationSource::class,
         'status' => ApplicationStatus::class,
         'can_auto_apply' => 'boolean',
+        'is_read' => 'boolean',
         'submitted_at' => 'datetime',
         'last_attempt_at' => 'datetime',
         'interview_scheduled_at' => 'datetime',
+        'posted_at' => 'datetime',
+        'application_deadline' => 'datetime',
     ];
 
     public function events()

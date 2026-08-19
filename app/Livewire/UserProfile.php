@@ -24,6 +24,7 @@ class UserProfile extends Component
     public $target_locations = '';
     public $remote_preference = 'include';
     public $max_job_age_days = 7;
+    public $target_platforms = [];
     
     public $saved = false;
     public $api_token;
@@ -44,6 +45,11 @@ class UserProfile extends Component
             $this->target_locations = $profile->target_locations;
             $this->remote_preference = $profile->remote_preference ?? 'include';
             $this->max_job_age_days = $profile->max_job_age_days ?? 7;
+            $this->target_platforms = is_array($profile->target_platforms) && count($profile->target_platforms) > 0 
+                ? $profile->target_platforms 
+                : ['LINKEDIN', 'INDEED', 'NAUKRI', 'UPLERS', 'UNSTOP', 'HIRIST', 'CUTSHORT'];
+        } else {
+            $this->target_platforms = ['LINKEDIN', 'INDEED', 'NAUKRI', 'UPLERS', 'UNSTOP', 'HIRIST', 'CUTSHORT'];
         }
     }
 
@@ -66,6 +72,7 @@ class UserProfile extends Component
             'target_locations' => 'nullable|string',
             'remote_preference' => 'required|in:none,include,only',
             'max_job_age_days' => 'nullable|integer|min:1|max:30',
+            'target_platforms' => 'array',
         ]);
 
         $profile = auth()->user()->profile ?? new \App\Models\Profile(['user_id' => auth()->id()]);
@@ -81,6 +88,7 @@ class UserProfile extends Component
         $profile->target_locations = $this->target_locations;
         $profile->remote_preference = $this->remote_preference;
         $profile->max_job_age_days = $this->max_job_age_days === '' ? null : $this->max_job_age_days;
+        $profile->target_platforms = $this->target_platforms;
 
         if ($this->resume) {
             $path = $this->resume->store('resumes', 'public');
