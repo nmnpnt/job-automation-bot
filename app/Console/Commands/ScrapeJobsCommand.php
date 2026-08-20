@@ -92,9 +92,14 @@ class ScrapeJobsCommand extends Command
                         mkdir(dirname($logFile), 0755, true);
                     }
                     if ($platform === $platforms[0]) {
-                        file_put_contents($logFile, "Starting scraper run...\n");
+                        // Clear log and write a fresh header at the start of each run
+                        $header  = "=====================================\n";
+                        $header .= "Scraper Run Started: " . now()->format('Y-m-d H:i:s T') . "\n";
+                        $header .= "Platforms: {$platformList}\n";
+                        $header .= "=====================================\n";
+                        file_put_contents($logFile, $header);
                     }
-                    file_put_contents($logFile, "Scraping {$platform}...\n", FILE_APPEND);
+                    file_put_contents($logFile, "Scraping {$platform}..\n", FILE_APPEND);
 
                     $process->start();
                     $profile->update(['scraper_pid' => $process->getPid()]);
@@ -161,12 +166,19 @@ class ScrapeJobsCommand extends Command
             $logFile = storage_path("logs/scraper-{$profile->user_id}.log");
             file_put_contents($logFile, "Scrape run completed. {$totalNewJobs} new jobs found.\n", FILE_APPEND);
             
+            $platformsWithStatus = implode(', ', array_map(function($p) use ($profile) {
+                $sessionDir = storage_path("app/bot-sessions/{$profile->user_id}/" . strtolower($p));
+                $status = (file_exists($sessionDir) && is_dir($sessionDir)) ? 'with login' : 'without login';
+                return "{$p} ({$status})";
+            }, $platforms));
+
             $summary = $totalNewJobs > 0
-                ? "✅ Scraping done on {$platformList}. {$totalNewJobs} new job(s) found!"
-                : "✅ Scraping done on {$platformList}. No new jobs this time.";
+                ? "✅ Scraping done on: {$platformsWithStatus}. {$totalNewJobs} new job(s) found!"
+                : "✅ Scraping done on: {$platformsWithStatus}. No new jobs this time.";
 
             try {
-                $profile->user->notifyChannels($summary, 'success', 'notify_on_system');
+                // Now using 'daily_summary' which maps to the "Scraper Completed" preference toggle
+                $profile->user->notifyChannels($summary, 'success', 'daily_summary');
             } catch (\Throwable $e) {}
         }
     }

@@ -4,70 +4,32 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Application;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class GeminiCoverLetterService
 {
+    protected AIService $aiService;
+
+    public function __construct(AIService $aiService)
+    {
+        $this->aiService = $aiService;
+    }
+
     /**
      * Generate a personalized cover letter using Google's Gemini API.
      *
      * @param User $user
      * @param Application $job
      * @return string
-     * @throws \Exception
      */
     public function generateCoverLetter(User $user, Application $job): string
     {
-        $apiKey = config('services.gemini.api_key');
-
-        if (empty($apiKey)) {
-            Log::warning('Gemini API key is not set. Cannot generate cover letter.');
-            return "Unable to generate cover letter: Gemini API key missing.";
-        }
-
         $prompt = $this->buildPrompt($user, $job);
 
         try {
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}", [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $prompt]
-                        ]
-                    ]
-                ],
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'maxOutputTokens' => 800,
-                ]
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                
-                // Extract text from the Gemini response structure
-                if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
-                    $coverLetter = $data['candidates'][0]['content']['parts'][0]['text'];
-                    return trim($coverLetter);
-                }
-                
-                Log::error('Gemini API returned an unexpected response format.', ['response' => $data]);
-                return "Failed to parse generated cover letter.";
-            }
-
-            Log::error('Gemini API request failed.', [
-                'status' => $response->status(),
-                'body' => $response->body()
-            ]);
-            
-            return "Failed to generate cover letter due to an API error.";
-            
+            return $this->aiService->generateContent($prompt, 0.7, 800, 3);
         } catch (\Exception $e) {
-            Log::error('Exception during Gemini API call: ' . $e->getMessage());
-            return "An error occurred while generating the cover letter.";
+            \Log::error('Exception during Gemini API call (Cover Letter): ' . $e->getMessage());
+            return "An error occurred while generating the cover letter. Please try again later.";
         }
     }
 
@@ -77,13 +39,18 @@ class GeminiCoverLetterService
     private function buildPrompt(User $user, Application $job): string
     {
         $userName = $user->name;
-        // Typically you might have $user->profile->resume_text or similar.
-        // Assuming we have basic user info for now.
-        $userSkills = "Full Stack Development, PHP, Laravel, JavaScript, Vue.js, Tailwind CSS"; // Placeholder if not in DB
+        
+        $defaultResume = $user->resumes()->where('is_default', true)->first();
+        if (!$defaultResume) {
+            $defaultResume = $user->resumes()->first();
+        }
+
+        $userSkills = $defaultResume ? $defaultResume->full_text : "No specific skills or resume provided."; 
         
         $jobTitle = $job->job_title;
         $companyName = $job->company_name;
-        $jobDescription = $job->job_description ?? 'A software engineering role focusing on web development.';
+        // Use the newly added description column if available
+        $jobDescription = $job->description ?? $job->job_description ?? 'A software engineering role focusing on web development.';
 
         return <<<EOT
 You are an expert career coach and technical writer. 

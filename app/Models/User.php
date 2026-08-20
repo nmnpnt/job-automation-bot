@@ -42,6 +42,16 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class);
     }
 
+    public function resumes()
+    {
+        return $this->hasMany(Resume::class);
+    }
+
+    public function applications()
+    {
+        return $this->hasMany(Application::class);
+    }
+
     public function routeNotificationForSlack(Notification $notification): mixed
     {
         return $this->notificationPreferences?->slack_webhook_url;

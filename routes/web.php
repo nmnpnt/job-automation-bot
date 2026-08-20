@@ -16,6 +16,18 @@ Route::get('/jobs/{jobId}', \App\Livewire\JobDetails::class)
     ->middleware(['auth', 'verified'])
     ->name('jobs.show');
 
+Route::get('/resumes/{resume}', \App\Livewire\ResumeBuilder::class)
+    ->middleware(['auth', 'verified'])
+    ->name('resumes.builder');
+
+Route::get('/resumes', \App\Livewire\ResumesManager::class)
+    ->middleware(['auth', 'verified'])
+    ->name('resumes.index');
+
+Route::get('/ats-analyzer', \App\Livewire\ATSAnalyzer::class)
+    ->middleware(['auth', 'verified'])
+    ->name('ats.analyzer');
+
 Route::get('interviews', \App\Livewire\InterviewsList::class)
     ->middleware(['auth', 'verified'])
     ->name('interviews.index');

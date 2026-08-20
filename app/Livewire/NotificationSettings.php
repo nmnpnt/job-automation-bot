@@ -14,6 +14,7 @@ class NotificationSettings extends Component
     public $notify_on_manual_required;
     public $notify_on_duplicate;
     public $notify_on_interview;
+    public $daily_summary;
 
     public $channel_in_app;
     public $channel_slack;
@@ -41,6 +42,7 @@ class NotificationSettings extends Component
         $this->notify_on_manual_required = $prefs->notify_on_manual_required;
         $this->notify_on_duplicate = $prefs->notify_on_duplicate;
         $this->notify_on_interview = $prefs->notify_on_interview ?? true;
+        $this->daily_summary = $prefs->daily_summary;
 
         $this->channel_in_app = $prefs->channel_in_app;
         $this->channel_slack = $prefs->channel_slack;
@@ -70,6 +72,7 @@ class NotificationSettings extends Component
             'notify_on_manual_required' => $this->notify_on_manual_required,
             'notify_on_duplicate' => $this->notify_on_duplicate,
             'notify_on_interview' => $this->notify_on_interview,
+            'daily_summary' => $this->daily_summary,
             'channel_in_app' => $this->channel_in_app,
             'channel_slack' => $this->channel_slack,
             'slack_webhook_url' => $this->slack_webhook_url,

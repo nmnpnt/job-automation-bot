@@ -70,6 +70,12 @@ class ExtensionController extends Controller
             ]);
         }
 
+        // Log duplicate attempt for auditing
+        $application->events()->create([
+            'status' => ApplicationStatus::DISCOVERED,
+            'message' => 'Chrome Extension attempted to sync this job again, but it was already discovered.',
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => 'Job already exists in database.',

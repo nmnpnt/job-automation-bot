@@ -13,29 +13,59 @@ class JobsList extends Component
     use WithPagination;
 
     public $filterSource = '';
-    public $generatedCoverLetter = null;
-    public $generatedFeedback = null;
-    public $generatedInterviewPrep = null;
-    public $selectedJobId = null;
-    public $isGenerating = false;
-    public $isAnalyzing = false;
-    public $isPreparing = false;
+    public $filterStatus = '';
+    public $search = '';
+    public $sortField = 'created_at';
+    public $sortDirection = 'desc';
+
+
 
     public function updatingFilterSource()
     {
         $this->resetPage();
     }
 
+    public function updatingFilterStatus()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function toggleSaveJob($jobId)
+    {
+        $job = Application::where('user_id', auth()->id())->find($jobId);
+        if ($job) {
+            $job->is_saved = !$job->is_saved;
+            $job->save();
+        }
+    }
+
     public function exportCSV()
     {
         $userId = auth()->id();
         
-        $query = Application::where('user_id', $userId)
-                            ->orderBy('created_at', 'desc');
+        $query = Application::where('user_id', $userId);
+
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('job_title', 'like', '%' . $this->search . '%')
+                  ->orWhere('company_name', 'like', '%' . $this->search . '%');
+            });
+        }
 
         if ($this->filterSource) {
             $query->where('application_source', $this->filterSource);
         }
+
+        if ($this->filterStatus) {
+            $query->where('status', $this->filterStatus);
+        }
+
+        $query->orderBy($this->sortField, $this->sortDirection);
 
         $jobs = $query->get();
 
@@ -63,184 +93,9 @@ class JobsList extends Component
         ]);
     }
 
-    public function generateCoverLetter($jobId)
-    {
-        $this->isGenerating = true;
-        $this->selectedJobId = $jobId;
-        $this->generatedCoverLetter = null;
 
-        try {
-            $job = Application::findOrFail($jobId);
-            $service = app(\App\Services\GeminiCoverLetterService::class);
-            $this->generatedCoverLetter = $service->generateCoverLetter(auth()->user(), $job);
-        } catch (\Exception $e) {
-            $this->generatedCoverLetter = "Error generating cover letter: " . $e->getMessage();
-        }
 
-        $this->isGenerating = false;
-        
-        $this->dispatch('open-modal', 'cover-letter-modal');
-    }
-
-    public function analyzeMatch($jobId)
-    {
-        $this->isAnalyzing = true;
-        $this->selectedJobId = $jobId;
-        $this->generatedFeedback = null;
-
-        try {
-            $job = Application::findOrFail($jobId);
-            $service = app(\App\Services\GeminiResumeAnalyzerService::class);
-            $this->generatedFeedback = $service->analyzeMatch(auth()->user(), $job);
-            
-            // Optionally save it to the job model
-            $job->update(['resume_feedback' => $this->generatedFeedback]);
-
-        } catch (\Exception $e) {
-            $this->generatedFeedback = "Error analyzing resume match: " . $e->getMessage();
-        }
-
-        $this->isAnalyzing = false;
-        
-        $this->dispatch('open-modal', 'resume-feedback-modal');
-    }
-
-    public $schedulingJobId = null;
-    public $interview_scheduled_at = '';
-    public $interview_type = 'Technical Interview';
-    public $interview_round = 'Round 1';
-    public $interview_meeting_link = '';
-    public $interview_notes = '';
-
-    public function openScheduleModal($jobId)
-    {
-        $this->schedulingJobId = $jobId;
-        $job = Application::findOrFail($jobId);
-        
-        $this->interview_scheduled_at = $job->interview_scheduled_at ? $job->interview_scheduled_at->format('Y-m-d\TH:i') : now()->addDays(2)->format('Y-m-d\T10:00');
-        $this->interview_type = $job->interview_type ?? 'Technical Interview';
-        $this->interview_round = $job->interview_round ?? 'Round 1';
-        $this->interview_meeting_link = $job->interview_meeting_link ?? '';
-        $this->interview_notes = $job->interview_notes ?? '';
-
-        $this->dispatch('open-modal', 'schedule-interview-modal');
-    }
-
-    public function saveScheduledInterview()
-    {
-        $this->validate([
-            'interview_scheduled_at' => 'required|date',
-            'interview_type' => 'required|string',
-            'interview_round' => 'required|string',
-            'interview_meeting_link' => 'nullable|url',
-            'interview_notes' => 'nullable|string',
-        ]);
-
-        try {
-            $job = Application::findOrFail($this->schedulingJobId);
-
-            // Prevent duplicate interview round
-            $duplicate = $job->events()
-                ->where('event_type', 'INTERVIEW_SCHEDULED')
-                ->where('message', 'like', "%Round: {$this->interview_round}%")
-                ->exists();
-
-            if ($duplicate) {
-                $this->dispatch('notify', ['message' => "An interview for {$this->interview_round} is already scheduled.", 'type' => 'error']);
-                return;
-            }
-
-            $formattedDate = \Carbon\Carbon::parse($this->interview_scheduled_at)->format('M d, Y h:i A');
-
-            $job->update([
-                'status' => 'INTERVIEW_REQUESTED',
-                'interview_scheduled_at' => $this->interview_scheduled_at,
-                'interview_type' => $this->interview_type,
-                'interview_round' => $this->interview_round,
-                'interview_meeting_link' => $this->interview_meeting_link,
-                'interview_notes' => $this->interview_notes,
-            ]);
-
-            $job->events()->create([
-                'event_type' => 'INTERVIEW_SCHEDULED',
-                'message' => "Interview scheduled for {$formattedDate} ({$this->interview_type}). Round: {$this->interview_round}"
-            ]);
-
-            // Dispatch alert to Slack and WhatsApp
-            $alertMsg = "📅 *Interview Scheduled!*
-Job: *{$job->job_title}* at *{$job->company_name}*
-Time: *{$formattedDate}*
-Type: {$this->interview_type}
-Round: {$this->interview_round}" . ($this->interview_meeting_link ? "\nLink: {$this->interview_meeting_link}" : "");
-
-            auth()->user()->notifyChannels($alertMsg, 'success', 'notify_on_interview');
-
-            $this->dispatch('close-modal', 'schedule-interview-modal');
-            $this->dispatch('notify', ['message' => 'Interview scheduled & notifications sent!', 'type' => 'success']);
-        } catch (\Exception $e) {
-            $this->dispatch('notify', ['message' => 'Error: ' . $e->getMessage(), 'type' => 'error']);
-        }
-    }
-
-    public function markAsApplied($jobId)
-    {
-        try {
-            $job = Application::findOrFail($jobId);
-
-            if ($job->status !== \App\Enums\ApplicationStatus::DISCOVERED && $job->status !== \App\Enums\ApplicationStatus::MATCHED) {
-                $this->dispatch('notify', ['message' => 'Job is already marked as applied or further along.', 'type' => 'error']);
-                return;
-            }
-
-            $job->update([
-                'status' => 'APPLIED',
-                'submitted_at' => now(),
-            ]);
-            
-            $job->events()->create([
-                'event_type' => 'APPLIED',
-                'message' => 'Manually marked as applied by user.'
-            ]);
-
-            // Notify channels
-            $msg = "✅ *Job Applied!* You applied to *{$job->job_title}* at *{$job->company_name}*.";
-            auth()->user()->notifyChannels($msg, 'info', 'notify_on_submitted');
-            
-            $this->dispatch('notify', ['message' => 'Job marked as applied!', 'type' => 'success']);
-        } catch (\Exception $e) {
-            $this->dispatch('notify', ['message' => 'Error: ' . $e->getMessage(), 'type' => 'error']);
-        }
-    }
-
-    public function generateInterviewPrep($jobId)
-    {
-        $this->isPreparing = true;
-        $this->selectedJobId = $jobId;
-        $this->generatedInterviewPrep = null;
-
-        try {
-            $job = Application::findOrFail($jobId);
-            $service = app(\App\Services\GeminiMockInterviewService::class);
-            $this->generatedInterviewPrep = $service->generatePrep(auth()->user(), $job);
-            
-            // Save it to the job model
-            $job->update(['interview_prep_notes' => $this->generatedInterviewPrep]);
-
-        } catch (\Exception $e) {
-            $this->generatedInterviewPrep = "Error generating interview prep: " . $e->getMessage();
-        }
-
-        $this->isPreparing = false;
-        
-        $this->dispatch('open-modal', 'interview-prep-modal');
-    }
-
-    public $filterStatus = '';
-
-    public function updatingFilterStatus()
-    {
-        $this->resetPage();
-    }
+    // Removed duplicate filterStatus and updatingFilterStatus
 
     #[On('echo:activity-feed,.ActivityLogged')]
     public function refreshList()
@@ -254,8 +109,14 @@ Round: {$this->interview_round}" . ($this->interview_meeting_link ? "\nLink: {$t
     {
         $userId = auth()->id();
         
-        $query = Application::where('user_id', $userId)
-                            ->orderBy('created_at', 'desc');
+        $query = Application::where('user_id', $userId);
+
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('job_title', 'like', '%' . $this->search . '%')
+                  ->orWhere('company_name', 'like', '%' . $this->search . '%');
+            });
+        }
 
         if ($this->filterSource) {
             $query->where('application_source', $this->filterSource);
@@ -264,6 +125,8 @@ Round: {$this->interview_round}" . ($this->interview_meeting_link ? "\nLink: {$t
         if ($this->filterStatus) {
             $query->where('status', $this->filterStatus);
         }
+
+        $query->orderBy($this->sortField, $this->sortDirection);
 
         $jobs = $query->paginate(20);
 

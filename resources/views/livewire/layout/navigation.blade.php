@@ -30,7 +30,7 @@ new class extends Component
             <div class="w-10 h-10 bg-indigo-500 rounded-xl flex flex-shrink-0 items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
             </div>
-            <span x-show="sidebarOpen" x-transition.opacity.duration.300ms class="text-xl font-bold text-white tracking-tight whitespace-nowrap">Job<span class="text-indigo-400">Auto</span></span>
+            <span x-show="sidebarOpen" x-transition.opacity.duration.300ms class="text-xl font-bold text-white tracking-tight whitespace-nowrap">Apply<span class="text-indigo-400">Bot</span></span>
         </a>
         <button x-show="sidebarOpen" @click="mobileSidebarOpen = false" class="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -58,6 +58,24 @@ new class extends Component
         <a href="{{ route('jobs.index') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-200 {{ request()->routeIs('jobs.*') ? 'bg-indigo-500/10 text-indigo-400 font-semibold' : 'hover:bg-slate-800 hover:text-white' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Jobs">
             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('jobs.*') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
             <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Jobs') }}</span>
+        </a>
+
+        <!-- Resumes -->
+        <a href="{{ route('resumes.index') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-200 {{ request()->routeIs('resumes.*') ? 'bg-indigo-500/10 text-indigo-400 font-semibold' : 'hover:bg-slate-800 hover:text-white' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Resumes">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('resumes.*') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Resumes') }}</span>
+        </a>
+
+        <!-- Interviews -->
+        <a href="{{ route('interviews.index') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-200 {{ request()->routeIs('interviews.*') ? 'bg-indigo-500/10 text-indigo-400 font-semibold' : 'hover:bg-slate-800 hover:text-white' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Interviews">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('interviews.*') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Interviews') }}</span>
+        </a>
+
+        <!-- ATS Analyzer -->
+        <a href="{{ route('ats.analyzer') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-200 {{ request()->routeIs('ats.analyzer') ? 'bg-indigo-500/10 text-indigo-400 font-semibold' : 'hover:bg-slate-800 hover:text-white' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="ATS Analyzer">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('ats.analyzer') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('ATS Analyzer') }}</span>
         </a>
 
         <div x-show="sidebarOpen" x-transition class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-8 px-3 whitespace-nowrap">System & Tools</div>

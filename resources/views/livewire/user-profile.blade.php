@@ -187,13 +187,33 @@
                                     </div>
                                 </div>
 
-                                <div class="relative group/input mt-4">
+                                <div class="relative mt-4">
                                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 transition-colors group-focus-within/input:text-indigo-600">Target Platforms</label>
-                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        @foreach(['LINKEDIN', 'INDEED', 'NAUKRI', 'UPLERS', 'UNSTOP', 'HIRIST', 'CUTSHORT'] as $platform)
-                                        <label class="relative flex items-center p-3 rounded-2xl border border-slate-200/60 bg-white/80 cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-300 transition-all duration-200 has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-500 has-[:checked]:ring-1 has-[:checked]:ring-indigo-500">
-                                            <input type="checkbox" wire:model="target_platforms" value="{{ $platform }}" class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500">
-                                            <span class="ml-3 text-sm font-bold text-slate-700">{{ ucfirst(strtolower($platform)) }}</span>
+                                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                        @php
+                                            $platforms = [
+                                                'LINKEDIN' => ['color' => '#0a66c2', 'icon' => '<path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>'],
+                                                'INDEED' => ['color' => '#003399', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>'],
+                                                'NAUKRI' => ['color' => '#0054c2', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>'],
+                                                'UPLERS' => ['color' => '#10b981', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>'],
+                                                'UNSTOP' => ['color' => '#f59e0b', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>'],
+                                                'HIRIST' => ['color' => '#8b5cf6', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>'],
+                                                'CUTSHORT' => ['color' => '#ec4899', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>']
+                                            ];
+                                        @endphp
+                                        @foreach($platforms as $platform => $data)
+                                        <label class="relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-slate-200/80 bg-white/80 cursor-pointer hover:border-indigo-300 transition-all duration-300 has-[:checked]:bg-indigo-50/50 has-[:checked]:border-indigo-500 has-[:checked]:shadow-md has-[:checked]:shadow-indigo-500/10 hover:-translate-y-1">
+                                            <input type="checkbox" wire:model="target_platforms" value="{{ $platform }}" class="peer sr-only">
+                                            
+                                            <!-- Checkmark Badge -->
+                                            <div class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-lg opacity-0 peer-checked:opacity-100 transition-opacity duration-300 scale-75 peer-checked:scale-100">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                            </div>
+
+                                            <div class="w-10 h-10 mb-2 rounded-xl flex items-center justify-center shadow-sm peer-checked:scale-110 transition-transform duration-300" style="background-color: {{ $data['color'] }}15; color: {{ $data['color'] }};">
+                                                <svg class="w-5 h-5" fill="{{ $platform == 'LINKEDIN' ? 'currentColor' : 'none' }}" stroke="{{ $platform == 'LINKEDIN' ? 'none' : 'currentColor' }}" viewBox="0 0 24 24">{!! $data['icon'] !!}</svg>
+                                            </div>
+                                            <span class="text-xs font-bold text-slate-600 peer-checked:text-indigo-900 transition-colors">{{ ucfirst(strtolower($platform)) }}</span>
                                         </label>
                                         @endforeach
                                     </div>

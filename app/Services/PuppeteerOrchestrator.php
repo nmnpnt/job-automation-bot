@@ -43,7 +43,13 @@ class PuppeteerOrchestrator
         $jsonInput = json_encode($inputData);
         $botPath = base_path('bot/apply.js');
         
-        $process = new Process(['node', $botPath, $jsonInput]);
+        $env = $_SERVER;
+        $env['SystemRoot'] = $env['SystemRoot'] ?? getenv('SystemRoot') ?: 'C:\\Windows';
+        $env['SystemDrive'] = $env['SystemDrive'] ?? getenv('SystemDrive') ?: 'C:';
+        $env['USERPROFILE'] = $env['USERPROFILE'] ?? getenv('USERPROFILE') ?: 'C:\\Users\\Default';
+        $env['PATH'] = $env['PATH'] ?? getenv('PATH') ?: '';
+
+        $process = new Process(['node', $botPath, $jsonInput], null, $env);
         $process->setTimeout(60);
 
         try {
@@ -54,7 +60,6 @@ class PuppeteerOrchestrator
             $lines = explode("\n", trim($output));
             $result = null;
             
-            // Search backwards for the last valid JSON line
             for ($i = count($lines) - 1; $i >= 0; $i--) {
                 $line = trim($lines[$i]);
                 if (empty($line)) continue;
@@ -112,6 +117,74 @@ class PuppeteerOrchestrator
             }
 
             throw new \Exception('Puppeteer process failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Fetch the full job description details for a given application URL.
+     */
+    public function fetchJobDetails(Application $application): bool
+    {
+        if (empty($application->original_job_url)) {
+            return false;
+        }
+
+        $sessionDir = storage_path("app/bot-sessions/{$application->user_id}/" . strtolower($application->application_source->name ?? 'UNKNOWN'));
+
+        $inputData = [
+            'url' => $application->original_job_url,
+            'platform' => $application->application_source->name ?? 'UNKNOWN',
+            'session_dir' => $sessionDir,
+            'is_docker' => file_exists('/.dockerenv')
+        ];
+
+        $jsonInput = json_encode($inputData);
+        $botPath = base_path('bot/fetch_job_details.js');
+
+        $env = $_SERVER;
+        $env['SystemRoot'] = $env['SystemRoot'] ?? getenv('SystemRoot') ?: 'C:\\Windows';
+        $env['SystemDrive'] = $env['SystemDrive'] ?? getenv('SystemDrive') ?: 'C:';
+        $env['USERPROFILE'] = $env['USERPROFILE'] ?? getenv('USERPROFILE') ?: 'C:\\Users\\Default';
+        $env['PATH'] = $env['PATH'] ?? getenv('PATH') ?: '';
+
+        $process = new Process(['node', $botPath, $jsonInput], null, $env);
+        $process->setTimeout(90);
+
+        try {
+            $process->mustRun();
+            $output = $process->getOutput();
+            
+            $lines = explode("\n", trim($output));
+            $result = null;
+            
+            for ($i = count($lines) - 1; $i >= 0; $i--) {
+                $line = trim($lines[$i]);
+                if (empty($line)) continue;
+                
+                $parsed = json_decode($line, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($parsed) && isset($parsed['status'])) {
+                    $result = $parsed;
+                    break;
+                }
+            }
+
+            if ($result && $result['status'] === 'success') {
+                $details = $result['details'] ?? [];
+                
+                if (!empty($details['description'])) {
+                    $application->update([
+                        'description' => $details['description'],
+                    ]);
+                    return true;
+                }
+            }
+
+            Log::error('Fetch Job Details failed: ' . ($result['message'] ?? 'Empty description returned.'));
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error('Puppeteer fetch details process failed: ' . $e->getMessage());
+            return false;
         }
     }
 }

@@ -18,6 +18,7 @@ class Application extends Model
         'status' => ApplicationStatus::class,
         'can_auto_apply' => 'boolean',
         'is_read' => 'boolean',
+        'is_saved' => 'boolean',
         'submitted_at' => 'datetime',
         'last_attempt_at' => 'datetime',
         'interview_scheduled_at' => 'datetime',
