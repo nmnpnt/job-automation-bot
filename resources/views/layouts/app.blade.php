@@ -10,13 +10,13 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <style>
-            body { font-family: 'Inter', sans-serif; }
+            body { font-family: 'Plus Jakarta Sans', sans-serif; }
             [x-cloak] { display: none !important; }
             
             /* Premium Custom Scrollbar */
@@ -47,10 +47,10 @@
           }">
         
         <!-- Animated Background Mesh Gradient -->
-        <div class="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
-            <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-400/20 rounded-full blur-[100px] -mr-32 -mt-32 mix-blend-multiply animate-pulse" style="animation-duration: 8s;"></div>
-            <div class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-400/20 rounded-full blur-[120px] -ml-32 -mb-32 mix-blend-multiply animate-pulse" style="animation-duration: 10s; animation-direction: reverse;"></div>
-            <div class="absolute top-1/2 left-1/2 w-[800px] h-[800px] bg-purple-400/10 rounded-full blur-[150px] transform -translate-x-1/2 -translate-y-1/2 mix-blend-multiply pointer-events-none"></div>
+        <div class="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-slate-50">
+            <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-400/10 rounded-full blur-[100px] -mr-32 -mt-32 mix-blend-multiply animate-blob"></div>
+            <div class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent-400/10 rounded-full blur-[120px] -ml-32 -mb-32 mix-blend-multiply animate-blob animation-delay-2000"></div>
+            <div class="absolute top-1/2 left-1/2 w-[800px] h-[800px] bg-brand-200/20 rounded-full blur-[150px] transform -translate-x-1/2 -translate-y-1/2 mix-blend-multiply pointer-events-none animate-blob animation-delay-4000"></div>
         </div>
         
         <!-- Mobile Sidebar Backdrop -->
@@ -97,11 +97,9 @@
                 </header>
 
                 <!-- Page Content (Scrollable) -->
-                <main class="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 relative">
-                    <!-- Vibrant Decorative Background -->
-                    <div class="fixed top-0 left-0 right-0 h-screen bg-gradient-to-br from-indigo-100/50 via-purple-50/50 to-emerald-50/30 -z-10 pointer-events-none"></div>
-                    <div class="fixed top-0 left-1/4 w-[500px] h-[500px] bg-pink-400/10 rounded-full blur-[100px] pointer-events-none mix-blend-multiply animate-pulse" style="animation-duration: 8s;"></div>
-                    <div class="fixed bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-400/10 rounded-full blur-[100px] pointer-events-none mix-blend-multiply animate-pulse" style="animation-duration: 10s; animation-direction: reverse;"></div>
+                <main class="flex-1 overflow-y-auto overflow-x-hidden relative">
+                    <!-- Vibrant Decorative Background inside Main -->
+                    <div class="fixed top-0 left-0 right-0 h-screen bg-gradient-to-br from-brand-50/50 via-slate-50/50 to-accent-50/30 -z-10 pointer-events-none"></div>
                     
                     @if(isset($header))
                         <!-- Mobile Header Injection -->
@@ -119,23 +117,23 @@
 
         <!-- Global Toast Notification -->
         <div x-data="{ show: false, message: '', title: '' }" 
-             @activity-logged.window="show = true; message = $event.detail.message; title = $event.detail.title;"
+             @activity-logged.window="show = true; message = $event.detail.message; title = $event.detail.title; setTimeout(() => show = false, 4000);"
              class="fixed bottom-6 right-6 z-50">
              
-            <div x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 sm:scale-100" x-transition:leave-end="opacity-0 sm:scale-95" style="display: none;" class="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl max-w-sm border border-slate-700 relative overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <button @click="show = false" class="absolute top-3 right-3 text-slate-400 hover:text-white transition-colors z-10">
+            <div x-show="show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 sm:scale-100" x-transition:leave-end="opacity-0 sm:scale-95" style="display: none;" class="bg-white text-slate-800 p-4 rounded-2xl shadow-xl shadow-brand-500/10 max-w-sm border border-slate-200/60 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-r from-brand-50/50 to-accent-50/50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <button @click="show = false" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors z-10">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
                 <div class="flex items-start relative z-10">
                     <div class="flex-shrink-0 mt-0.5">
-                        <div class="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                            <svg class="w-5 h-5 text-indigo-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <div class="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center border border-brand-200">
+                            <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
                     </div>
                     <div class="ml-3 pr-6 w-full">
-                        <h4 class="font-bold text-sm text-white" x-text="title"></h4>
-                        <p class="text-sm mt-1 text-slate-300" x-text="message"></p>
+                        <h4 class="font-bold text-sm text-slate-800" x-text="title"></h4>
+                        <p class="text-sm mt-1 text-slate-600" x-text="message"></p>
                     </div>
                 </div>
             </div>

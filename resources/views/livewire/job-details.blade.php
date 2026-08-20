@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div class="flex items-center">
-                <a href="{{ route('jobs.index') }}" wire:navigate class="mr-4 p-2 rounded-xl bg-white shadow-sm border border-slate-200 text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-colors">
+                <a href="{{ route('jobs.index') }}" wire:navigate class="mr-4 p-2 rounded-xl bg-white shadow-sm border border-slate-200 text-slate-500 hover:text-brand-600 hover:bg-slate-50 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 </a>
                 <h2 class="font-bold text-xl text-slate-800 leading-tight">
@@ -10,7 +10,7 @@
                 </h2>
             </div>
             <div>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brand-100 text-brand-700">
                     {{ $job->status->value }}
                 </span>
             </div>
@@ -20,7 +20,7 @@
     <div class="max-w-5xl mx-auto space-y-6">
         <!-- Header Card -->
         <div class="bg-white/70 backdrop-blur-xl overflow-hidden shadow-sm sm:rounded-3xl border border-white/50 p-6 md:p-10 relative group">
-            <div class="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-brand-50/50 to-accent-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             
             <div class="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div>
@@ -64,7 +64,7 @@
                     </button>
                     @endif
 
-                    <button wire:click="openScheduleModal" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-wait inline-flex justify-center items-center px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-purple-500/20">
+                    <button wire:click="openScheduleModal" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-wait inline-flex justify-center items-center px-6 py-3 bg-accent-500 hover:bg-accent-600 text-white text-sm font-bold rounded-xl transition-colors shadow-lg shadow-accent-500/20">
                         <svg wire:loading.remove wire:target="openScheduleModal" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         <svg wire:loading wire:target="openScheduleModal" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         Schedule Interview
@@ -80,13 +80,13 @@
                 <div class="bg-white/70 backdrop-blur-xl shadow-sm rounded-3xl border border-white/50 p-6 md:p-8">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-black text-slate-900 flex items-center">
-                            <div class="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg mr-2">
+                            <div class="p-1.5 bg-brand-100 text-brand-600 rounded-lg mr-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
                             </div>
                             Job Description
                         </h3>
                         <div class="flex items-center space-x-2">
-                            <button wire:click="manualFetchDescription" wire:loading.attr="disabled" class="disabled:opacity-50 inline-flex items-center px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-sm font-semibold rounded-lg transition-colors">
+                            <button wire:click="manualFetchDescription" wire:loading.attr="disabled" class="disabled:opacity-50 inline-flex items-center px-3 py-1.5 bg-brand-50 text-brand-700 hover:bg-brand-100 text-sm font-semibold rounded-lg transition-colors">
                                 <svg wire:loading.remove wire:target="manualFetchDescription" class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                 <svg wire:loading wire:target="manualFetchDescription" class="animate-spin w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                 Fetch
@@ -100,10 +100,10 @@
 
                     @if($isEditingDescription)
                         <div class="mt-2">
-                            <textarea wire:model="editDescriptionText" rows="12" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm font-mono"></textarea>
+                            <textarea wire:model="editDescriptionText" rows="12" class="w-full rounded-xl border-slate-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-sm font-mono"></textarea>
                             <div class="mt-3 flex justify-end space-x-3">
                                 <button wire:click="$set('isEditingDescription', false)" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
-                                <button wire:click="saveDescription" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">Save Description</button>
+                                <button wire:click="saveDescription" class="px-4 py-2 bg-brand-600 text-white font-semibold rounded-lg hover:bg-brand-700 transition-colors">Save Description</button>
                             </div>
                         </div>
                     @else
@@ -114,7 +114,7 @@
                         @else
                             <div class="text-center py-8 text-slate-500">
                                 <p class="mb-2">Detailed description not available.</p>
-                                <button wire:click="manualFetchDescription" class="text-indigo-600 font-medium hover:underline">Click to fetch from URL</button>
+                                <button wire:click="manualFetchDescription" class="text-brand-600 font-medium hover:underline">Click to fetch from URL</button>
                             </div>
                         @endif
                     @endif
@@ -228,16 +228,17 @@
 
                 <!-- AI Analysis Card -->
                 <!-- AI Analysis Card -->
+                <!-- AI Analysis Card -->
                 <div class="relative bg-slate-900 rounded-3xl p-[1px] overflow-hidden group shadow-xl">
                     <!-- Animated gradient border -->
-                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-emerald-500 opacity-30 group-hover:opacity-100 transition-opacity duration-700 blur-md"></div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-accent-500 via-purple-500 to-brand-500 opacity-30 group-hover:opacity-100 transition-opacity duration-700 blur-md"></div>
                     <div class="absolute inset-[-100%] bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[spin_4s_linear_infinite] group-hover:opacity-100 opacity-0 transition-opacity"></div>
                     
                     <div class="relative bg-slate-900/90 backdrop-blur-2xl rounded-3xl h-full p-6 text-slate-100">
-                        <h3 class="text-sm font-black uppercase tracking-widest text-indigo-400 mb-6 flex items-center gap-3">
+                        <h3 class="text-sm font-black uppercase tracking-widest text-brand-400 mb-6 flex items-center gap-3">
                             <span class="relative flex h-3 w-3">
-                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                              <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-500"></span>
                             </span>
                             AI Insights Hub
                         </h3>
@@ -318,7 +319,7 @@
                     <div class="relative border-l border-slate-200 ml-3 space-y-6">
                         @foreach($job->events->sortByDesc('created_at') as $event)
                             <div class="relative pl-6">
-                                <span class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-500 ring-4 ring-white"></span>
+                                <span class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-brand-500 ring-4 ring-white"></span>
                                 <p class="text-xs font-semibold text-slate-400 mb-1">{{ $event->created_at->format('M d, Y g:i A') }}</p>
                                 <p class="text-sm font-medium text-slate-800">{{ $event->message }}</p>
                             </div>
@@ -477,7 +478,7 @@
     <x-modal name="schedule-interview-modal" focusable>
         <form wire:submit.prevent="saveScheduledInterview" class="p-6">
             <h2 class="text-xl font-bold text-slate-900 mb-1 flex items-center">
-                <div class="p-2 bg-purple-100 text-purple-600 rounded-xl mr-3">
+                <div class="p-2 bg-accent-100 text-accent-600 rounded-xl mr-3">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
                 Schedule Interview & Send Alert
@@ -487,13 +488,13 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Interview Date & Time</label>
-                    <input type="datetime-local" wire:model="interview_scheduled_at" required class="block w-full rounded-xl border-slate-300 text-sm focus:border-purple-500 focus:ring-purple-500">
+                    <input type="datetime-local" wire:model="interview_scheduled_at" required class="block w-full rounded-xl border-slate-300 text-sm focus:border-accent-500 focus:ring-accent-500">
                     @error('interview_scheduled_at') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Interview Round</label>
-                    <select wire:model="interview_round" required class="block w-full rounded-xl border-slate-300 text-sm focus:border-purple-500 focus:ring-purple-500">
+                    <select wire:model="interview_round" required class="block w-full rounded-xl border-slate-300 text-sm focus:border-accent-500 focus:ring-accent-500">
                         <option value="Round 1">Round 1</option>
                         <option value="Round 2">Round 2</option>
                         <option value="Round 3">Round 3</option>
@@ -505,7 +506,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Interview Format</label>
-                    <select wire:model="interview_type" required class="block w-full rounded-xl border-slate-300 text-sm focus:border-purple-500 focus:ring-purple-500">
+                    <select wire:model="interview_type" required class="block w-full rounded-xl border-slate-300 text-sm focus:border-accent-500 focus:ring-accent-500">
                         <option value="HR Phone Screen">HR Phone Screen</option>
                         <option value="Technical Interview">Technical Interview</option>
                         <option value="System Design">System Design</option>
@@ -517,13 +518,13 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Meeting Link (Google Meet / Zoom / Teams)</label>
-                    <input type="url" wire:model="interview_meeting_link" placeholder="https://meet.google.com/..." class="block w-full rounded-xl border-slate-300 text-sm focus:border-purple-500 focus:ring-purple-500">
+                    <input type="url" wire:model="interview_meeting_link" placeholder="https://meet.google.com/..." class="block w-full rounded-xl border-slate-300 text-sm focus:border-accent-500 focus:ring-accent-500">
                     @error('interview_meeting_link') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Preparation Notes / Instructions</label>
-                    <textarea wire:model="interview_notes" rows="3" placeholder="Topics to review, interviewer names, coding focus..." class="block w-full rounded-xl border-slate-300 text-sm focus:border-purple-500 focus:ring-purple-500"></textarea>
+                    <textarea wire:model="interview_notes" rows="3" placeholder="Topics to review, interviewer names, coding focus..." class="block w-full rounded-xl border-slate-300 text-sm focus:border-accent-500 focus:ring-accent-500"></textarea>
                     @error('interview_notes') <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span> @enderror
                 </div>
             </div>
@@ -532,7 +533,7 @@
                 <button type="button" x-on:click="$dispatch('close')" class="bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 border border-slate-300 rounded-xl transition-colors">
                     Cancel
                 </button>
-                <button type="submit" wire:loading.attr="disabled" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-5 py-2 text-sm font-bold rounded-xl shadow-md hover:from-purple-700 hover:to-indigo-700 transition-all flex items-center">
+                <button type="submit" wire:loading.attr="disabled" class="bg-gradient-to-r from-accent-600 to-brand-600 text-white px-5 py-2 text-sm font-bold rounded-xl shadow-md hover:from-accent-700 hover:to-brand-700 transition-all flex items-center">
                     <span wire:loading.remove wire:target="saveScheduledInterview">Save & Dispatch Alerts</span>
                     <span wire:loading wire:target="saveScheduledInterview">Saving...</span>
                 </button>
