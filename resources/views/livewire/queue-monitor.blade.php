@@ -1,197 +1,171 @@
-<div class="space-y-8 animate-fade-in-up">
-    <!-- Page Header -->
-    <div class="md:flex md:items-center md:justify-between bg-white/60 backdrop-blur-xl p-6 rounded-3xl border border-slate-200/60 shadow-sm relative overflow-hidden transition-colors duration-500">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
-        <div class="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl -ml-32 -mb-32 pointer-events-none"></div>
-        
-        <div class="min-w-0 flex-1 relative z-10">
-            <h2 class="text-3xl font-extrabold leading-9 text-slate-900 tracking-tight">
-                Background Queue
-            </h2>
-            <p class="mt-1 text-sm text-slate-500 font-medium">Monitor and manage automated tasks in real-time.</p>
-        </div>
-        
-        <div class="mt-4 flex md:ml-4 md:mt-0 relative z-10">
-            <button wire:click="$refresh" class="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50:bg-slate-600 transition-colors">
-                <svg wire:loading.class="animate-spin" class="-ml-0.5 mr-1.5 h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                </svg>
+<div class="space-y-6" wire:poll.5s>
+    <div class="bg-slate-900/60 backdrop-blur-2xl rounded-[2rem] border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.2)] overflow-hidden transition-colors duration-500 p-6">
+        <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-brand-500/20 text-brand-400 rounded-2xl mr-4 border border-brand-500/30 shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-white tracking-wide uppercase">Background Queue</h2>
+                    <p class="text-sm font-bold text-slate-400 mt-1">Monitor and manage automated tasks in real-time.</p>
+                </div>
+            </div>
+            <button wire:click="$refresh" class="inline-flex items-center justify-center rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] group">
+                <svg class="w-4 h-4 mr-2 text-slate-400 group-hover:text-white group-hover:rotate-180 transition-all duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 Refresh
             </button>
         </div>
-    </div>
 
-    @if (session()->has('message'))
-        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl flex items-center shadow-sm animate-fade-in-up" role="alert">
-            <svg class="w-5 h-5 mr-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span class="block sm:inline font-medium text-sm">{{ session('message') }}</span>
-        </div>
-    @endif
-
-    <!-- Stats Summary Cards -->
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <div class="bg-white/80 backdrop-blur-xl rounded-3xl border border-slate-200 p-6 flex items-center shadow-sm transition-colors duration-500 hover:-translate-y-1 transform">
-            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mr-4">
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-black/30 rounded-2xl p-5 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)] relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all duration-500"></div>
+                <div class="flex items-center justify-between relative z-10">
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-1">Pending Jobs</p>
+                        <p class="text-4xl font-black text-white drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]">{{ $pendingJobs->count() }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                        <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                </div>
             </div>
-            <div>
-                <p class="text-sm font-medium text-slate-500">Pending Jobs</p>
-                <p class="text-2xl font-black text-slate-900">{{ $pendingJobs->count() }}</p>
+            <div class="bg-black/30 rounded-2xl p-5 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)] relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-500"></div>
+                <div class="flex items-center justify-between relative z-10">
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-1">Successfully Completed</p>
+                        <p class="text-4xl font-black text-white drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]">{{ $successfulJobsCount }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                        <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <div class="bg-white/80 backdrop-blur-xl rounded-3xl border border-slate-200 p-6 flex items-center shadow-sm transition-colors duration-500 hover:-translate-y-1 transform">
-            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mr-4">
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div class="bg-black/30 rounded-2xl p-5 border border-neon-pink/20 shadow-[0_0_15px_rgba(255,42,133,0.1)] relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-neon-pink/10 rounded-full blur-2xl group-hover:bg-neon-pink/20 transition-all duration-500"></div>
+                <div class="flex items-center justify-between relative z-10">
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-neon-pink mb-1">Failed Jobs</p>
+                        <p class="text-4xl font-black text-white drop-shadow-[0_0_8px_rgba(255,42,133,0.4)]">{{ $failedJobs->count() }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-neon-pink/20 flex items-center justify-center border border-neon-pink/30 shadow-[0_0_10px_rgba(255,42,133,0.2)]">
+                        <svg class="w-6 h-6 text-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                </div>
             </div>
-            <div>
-                <p class="text-sm font-medium text-slate-500">Successfully Completed</p>
-                <p class="text-2xl font-black text-slate-900">{{ $successCount }}</p>
-            </div>
-        </div>
-
-        <div class="bg-white/80 backdrop-blur-xl rounded-3xl border border-slate-200 p-6 flex items-center shadow-sm transition-colors duration-500 hover:-translate-y-1 transform">
-            <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mr-4">
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-            </div>
-            <div>
-                <p class="text-sm font-medium text-slate-500">Failed Jobs</p>
-                <p class="text-2xl font-black text-slate-900">{{ $failedJobs->count() }}</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tabbed Lists -->
-    <div x-data="{ activeTab: 'failed' }" class="bg-white/80 backdrop-blur-xl rounded-3xl border border-slate-200 shadow-sm overflow-hidden transition-colors duration-500">
-        <div class="flex border-b border-slate-100">
-            <button @click="activeTab = 'failed'" :class="{ 'border-b-2 border-rose-500 text-rose-600': activeTab === 'failed', 'text-slate-500 hover:text-slate-700:text-slate-300': activeTab !== 'failed' }" class="px-6 py-4 font-bold text-sm outline-none transition-colors">
-                Failed Jobs
-                @if($failedJobs->count() > 0)
-                    <span class="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800">{{ $failedJobs->count() }}</span>
-                @endif
-            </button>
-            <button @click="activeTab = 'pending'" :class="{ 'border-b-2 border-amber-500 text-amber-600': activeTab === 'pending', 'text-slate-500 hover:text-slate-700:text-slate-300': activeTab !== 'pending' }" class="px-6 py-4 font-bold text-sm outline-none transition-colors">
-                Pending Jobs
-                @if($pendingJobs->count() > 0)
-                    <span class="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800">{{ $pendingJobs->count() }}</span>
-                @endif
-            </button>
         </div>
 
-        <div class="p-0 overflow-y-auto max-h-[600px] custom-scrollbar">
-            
+        <div x-data="{ activeTab: 'failed' }" class="bg-black/20 rounded-[2rem] border border-white/5 overflow-hidden">
+            <div class="border-b border-white/5 bg-black/40 px-4">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button @click="activeTab = 'failed'"
+                            :class="activeTab === 'failed' ? 'border-neon-pink text-neon-pink shadow-[0_2px_10px_rgba(255,42,133,0.4)]' : 'border-transparent text-slate-500 hover:text-slate-300 hover:border-slate-700'"
+                            class="whitespace-nowrap border-b-2 py-4 px-1 text-[11px] font-black uppercase tracking-widest transition-all duration-300">
+                        Failed Jobs
+                    </button>
+                    <button @click="activeTab = 'pending'"
+                            :class="activeTab === 'pending' ? 'border-amber-400 text-amber-400 shadow-[0_2px_10px_rgba(251,191,36,0.4)]' : 'border-transparent text-slate-500 hover:text-slate-300 hover:border-slate-700'"
+                            class="whitespace-nowrap border-b-2 py-4 px-1 text-[11px] font-black uppercase tracking-widest transition-all duration-300">
+                        Pending Jobs
+                    </button>
+                </nav>
+            </div>
+
             <!-- Failed Jobs Tab -->
-            <div x-show="activeTab === 'failed'" x-cloak>
+            <div x-show="activeTab === 'failed'" x-cloak class="p-2">
                 @if($failedJobs->count() > 0)
-                    <ul role="list" class="divide-y divide-slate-100">
+                    <div class="mb-4 px-4 pt-4 flex justify-end">
+                         <button wire:click="retryAll" wire:loading.attr="disabled" class="disabled:opacity-50 disabled:cursor-wait inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-600 to-neon-cyan/80 hover:from-brand-500 hover:to-neon-cyan px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all duration-300 border border-brand-400/30">
+                            <svg wire:loading.remove wire:target="retryAll" class="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            <svg wire:loading wire:target="retryAll" class="animate-spin w-3.5 h-3.5 mr-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            Retry All Failed
+                        </button>
+                    </div>
+                    <ul role="list" class="divide-y divide-white/5">
                         @foreach ($failedJobs as $fjob)
-                            <li class="px-6 py-5 hover:bg-slate-50/50:bg-slate-700/30 transition-colors" x-data="{ open: false }">
-                                <div class="flex flex-col md:flex-row md:justify-between md:items-center">
-                                    <div class="mb-4 md:mb-0">
-                                        <p class="text-sm font-bold text-slate-900 flex items-center">
-                                            Job #{{ $fjob->id }}
-                                            <span class="ml-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200">{{ $fjob->queue }}</span>
-                                        </p>
-                                        <p class="mt-1 flex items-center text-xs text-rose-500 font-medium">
-                                            <svg class="flex-shrink-0 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            Failed {{ \Carbon\Carbon::parse($fjob->failed_at)->diffForHumans() }}
-                                        </p>
+                            <li class="px-6 py-5 hover:bg-white/5 transition-colors group" x-data="{ open: false }">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex-1">
+                                        <div class="flex items-center">
+                                            <p class="text-sm font-black text-white flex items-center">
+                                                {{ Str::limit($fjob->exception, 50) }}
+                                            </p>
+                                            <span class="ml-3 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-rose-500/20 text-rose-400 border border-rose-500/30">Failed</span>
+                                        </div>
+                                        <div class="mt-2 flex items-center text-xs font-bold text-slate-400">
+                                            <span class="mr-3 font-mono text-slate-500">{{ Str::afterLast($fjob->payload, '\\') ?? 'Unknown Job' }}</span>
+                                            <span>Failed {{ \Carbon\Carbon::parse($fjob->failed_at)->diffForHumans() }}</span>
+                                        </div>
                                     </div>
-                                    <div class="flex flex-wrap items-center gap-2">
-                                        <button @click="open = !open" class="text-xs text-slate-500 hover:text-slate-700:text-slate-200 underline font-medium mr-2">
+                                    <div class="flex items-center space-x-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+                                        <button @click="open = !open" class="text-[10px] uppercase font-black tracking-widest text-slate-400 hover:text-white underline decoration-slate-600 hover:decoration-white transition-colors mr-2">
                                             <span x-show="!open">Show Error</span>
                                             <span x-show="open">Hide Error</span>
                                         </button>
-                                        <button wire:click="retryJob('{{ $fjob->uuid }}')" wire:loading.attr="disabled" wire:target="retryJob('{{ $fjob->uuid }}')" class="disabled:opacity-50 disabled:cursor-wait inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm border border-slate-200 hover:bg-indigo-50:bg-indigo-500/20 hover:text-indigo-600:text-indigo-300 transition-colors focus:outline-none">
+                                        <button wire:click="retryJob('{{ $fjob->uuid }}')" wire:loading.attr="disabled" wire:target="retryJob('{{ $fjob->uuid }}')" class="disabled:opacity-50 disabled:cursor-wait inline-flex items-center justify-center rounded-xl bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white transition-all focus:outline-none">
                                             <svg wire:loading.remove wire:target="retryJob('{{ $fjob->uuid }}')" class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                             <svg wire:loading wire:target="retryJob('{{ $fjob->uuid }}')" class="animate-spin w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                             Retry
                                         </button>
-                                        <button x-data x-on:click="$dispatch('ask-confirm', { message: 'Are you sure you want to delete this failed job?', onConfirm: () => $wire.deleteFailedJob('{{ $fjob->uuid }}') })" wire:loading.attr="disabled" wire:target="deleteFailedJob('{{ $fjob->uuid }}')" class="disabled:opacity-50 disabled:cursor-wait inline-flex items-center justify-center rounded-xl bg-white px-3 py-1.5 text-xs font-bold text-rose-600 shadow-sm border border-rose-200 hover:bg-rose-50:bg-rose-500/20 hover:text-rose-700:text-rose-300 transition-colors focus:outline-none">
+                                        <button x-data x-on:click="if(confirm('Are you sure you want to delete this failed job?')) $wire.deleteFailedJob('{{ $fjob->uuid }}')" wire:loading.attr="disabled" wire:target="deleteFailedJob('{{ $fjob->uuid }}')" class="disabled:opacity-50 disabled:cursor-wait inline-flex items-center justify-center rounded-xl bg-rose-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 hover:text-rose-300 transition-all focus:outline-none">
                                             <svg wire:loading.remove wire:target="deleteFailedJob('{{ $fjob->uuid }}')" class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                             <svg wire:loading wire:target="deleteFailedJob('{{ $fjob->uuid }}')" class="animate-spin w-3.5 h-3.5 mr-1 text-rose-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
                                             Del
                                         </button>
                                     </div>
                                 </div>
-                                <div x-show="open" x-cloak class="mt-4 bg-slate-900 rounded-lg p-4 overflow-x-auto shadow-inner border border-slate-700">
-                                    <pre class="text-xs text-rose-300 font-mono whitespace-pre-wrap break-words leading-relaxed">{{ substr($fjob->exception, 0, 1500) }}{{ strlen($fjob->exception) > 1500 ? '...' : '' }}</pre>
+                                <div x-show="open" x-cloak class="mt-4 bg-black/50 rounded-xl p-4 overflow-x-auto shadow-inner border border-white/5">
+                                    <pre class="text-[10px] text-neon-pink font-mono whitespace-pre-wrap break-words leading-relaxed">{{ substr($fjob->exception, 0, 1500) }}{{ strlen($fjob->exception) > 1500 ? '...' : '' }}</pre>
                                 </div>
                             </li>
                         @endforeach
                     </ul>
                 @else
-                    <div class="flex flex-col items-center justify-center h-64 text-center">
-                        <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4 shadow-sm">
-                            <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div class="flex flex-col items-center justify-center py-16 text-center">
+                        <div class="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6 shadow-[inset_0_2px_10px_rgba(16,185,129,0.2)] border border-emerald-500/20">
+                            <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
-                        <h3 class="text-sm font-bold text-slate-900">All clear</h3>
-                        <p class="mt-1 text-sm text-slate-500">No failed jobs to display.</p>
+                        <h3 class="text-lg font-black text-white tracking-wide">All clear</h3>
+                        <p class="mt-2 text-sm text-slate-400 font-bold max-w-md">No failed jobs to display. Your automation systems are running smoothly.</p>
                     </div>
                 @endif
             </div>
 
             <!-- Pending Jobs Tab -->
-            <div x-show="activeTab === 'pending'" x-cloak>
+            <div x-show="activeTab === 'pending'" x-cloak class="p-2">
                 @if($pendingJobs->count() > 0)
-                    <ul role="list" class="divide-y divide-slate-100">
+                    <ul role="list" class="divide-y divide-white/5">
                         @foreach ($pendingJobs as $job)
-                            <li class="px-6 py-5 hover:bg-slate-50/50:bg-slate-700/30 transition-colors">
+                            <li class="px-6 py-5 hover:bg-white/5 transition-colors">
                                 <div class="flex justify-between items-center">
                                     <div>
-                                        <p class="text-sm font-bold text-slate-900 flex items-center">
+                                        <p class="text-sm font-black text-white flex items-center">
                                             Job #{{ $job->id }}
-                                            <span class="ml-2 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200">{{ $job->queue }}</span>
+                                            <span class="ml-3 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_8px_rgba(245,158,11,0.2)]">{{ $job->queue }}</span>
                                         </p>
-                                        <p class="mt-1 flex items-center text-xs text-slate-500 font-medium">
-                                            <svg class="flex-shrink-0 mr-1.5 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <p class="mt-2 flex items-center text-xs font-bold text-slate-400">
+                                            <svg class="flex-shrink-0 mr-1.5 h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                             Created {{ \Carbon\Carbon::createFromTimestamp($job->created_at)->diffForHumans() }}
                                         </p>
                                     </div>
-                                    <div class="text-right">
-                                        <p class="text-sm text-slate-900 font-bold">{{ $job->attempts }}</p>
-                                        <p class="text-xs text-slate-500 font-medium">Attempts</p>
+                                    <div class="text-right bg-white/5 p-3 rounded-xl border border-white/5">
+                                        <p class="text-xl text-neon-cyan font-black drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">{{ $job->attempts }}</p>
+                                        <p class="text-[9px] uppercase tracking-widest text-slate-500 font-black mt-1">Attempts</p>
                                     </div>
                                 </div>
                             </li>
                         @endforeach
                     </ul>
                 @else
-                    <div class="flex flex-col items-center justify-center h-64 text-center">
-                        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 shadow-sm border border-slate-100">
-                            <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <div class="flex flex-col items-center justify-center py-16 text-center">
+                        <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]">
+                            <svg class="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         </div>
-                        <h3 class="text-sm font-bold text-slate-900">Queue is clear</h3>
-                        <p class="mt-1 text-sm text-slate-500">No pending jobs in the queue.</p>
+                        <h3 class="text-lg font-black text-white tracking-wide">Queue is clear</h3>
+                        <p class="mt-2 text-sm text-slate-400 font-bold max-w-md">No pending jobs in the queue. All background tasks have been processed.</p>
                     </div>
                 @endif
             </div>
-
         </div>
     </div>
-    <style>
-        .animate-fade-in-up {
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
-            border-radius: 20px;
-        }
-    </style>
 </div>
