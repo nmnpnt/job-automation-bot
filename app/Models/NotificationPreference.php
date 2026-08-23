@@ -26,6 +26,7 @@ class NotificationPreference extends Model
         'channel_telegram' => 'boolean',
         'channel_slack' => 'boolean',
         'channel_whatsapp' => 'boolean',
+        'notify_on_high_match' => 'boolean',
     ];
 
     public function user()

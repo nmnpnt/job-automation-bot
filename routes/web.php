@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Livewire\Volt\Volt;
 
 Route::view('/', 'welcome');
 
@@ -32,21 +33,18 @@ Route::get('interviews', \App\Livewire\InterviewsList::class)
     ->middleware(['auth', 'verified'])
     ->name('interviews.index');
 
-Route::get('queue-monitor', \App\Livewire\QueueMonitor::class)
-    ->middleware(['auth', 'verified'])
-    ->name('queue-monitor');
-
-Route::get('architecture', \App\Livewire\Architecture::class)
-    ->middleware(['auth', 'verified'])
-    ->name('architecture');
-
-Route::get('developer-docs', \App\Livewire\DeveloperDocs::class)
-    ->middleware(['auth', 'verified'])
-    ->name('developer-docs');
-
-Route::get('automations', \App\Livewire\AutomationsHub::class)
-    ->middleware(['auth', 'verified'])
-    ->name('automations');
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+    Route::get('queue-monitor', \App\Livewire\QueueMonitor::class)->name('queue-monitor');
+    Route::get('architecture', \App\Livewire\Architecture::class)->name('architecture');
+    Route::get('developer-docs', \App\Livewire\DeveloperDocs::class)->name('developer-docs');
+    Route::get('automations', \App\Livewire\AutomationsHub::class)->name('automations');
+    Route::get('logs', \App\Livewire\LogViewer::class)->name('logs');
+    
+    // Admin management routes
+    Volt::route('admin/users', 'admin.users-list')->name('admin.users.index');
+    Volt::route('admin/users/{user}', 'admin.user-dashboard')->name('admin.users.show');
+    Volt::route('admin/schedules', 'admin.schedules-list')->name('admin.schedules.index');
+});
 
 Route::get('activity', \App\Livewire\LiveActivityFeed::class)
     ->middleware(['auth', 'verified'])
@@ -60,10 +58,6 @@ Route::post('/notifications/mark-all-read', function (Illuminate\Http\Request $r
     $request->user()->unreadNotifications->markAsRead();
     return response()->json(['success' => true]);
 })->middleware(['auth'])->name('notifications.markAllRead');
-
-Route::get('logs', \App\Livewire\LogViewer::class)
-    ->middleware(['auth', 'verified'])
-    ->name('logs');
 
 Route::view('profile', 'profile')
     ->middleware(['auth'])

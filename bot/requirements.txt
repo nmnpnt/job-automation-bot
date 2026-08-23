@@ -1,0 +1,9 @@
+playwright
+beautifulsoup4
+playwright-stealth
+httpx
+
+pytest
+pytest-playwright
+fastapi
+uvicorn[standard]

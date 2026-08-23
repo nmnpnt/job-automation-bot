@@ -52,7 +52,6 @@
     <div class="flex space-x-2 bg-slate-900/50 p-1.5 rounded-2xl w-fit border border-white/10 backdrop-blur-xl shadow-lg mb-4">
         <button @click="tab = 'overview'" :class="tab === 'overview' ? 'bg-gradient-to-r from-brand-600/80 to-neon-purple/80 shadow-[0_0_15px_rgba(139,92,246,0.4)] text-white' : 'text-slate-400 hover:text-white hover:bg-white/10'" class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300">Overview</button>
         <button @click="tab = 'analytics'" :class="tab === 'analytics' ? 'bg-gradient-to-r from-brand-600/80 to-neon-purple/80 shadow-[0_0_15px_rgba(139,92,246,0.4)] text-white' : 'text-slate-400 hover:text-white hover:bg-white/10'" class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300">Analytics</button>
-        <button @click="tab = 'queue'" :class="tab === 'queue' ? 'bg-gradient-to-r from-brand-600/80 to-neon-purple/80 shadow-[0_0_15px_rgba(139,92,246,0.4)] text-white' : 'text-slate-400 hover:text-white hover:bg-white/10'" class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300">Review Queue</button>
     </div>
 
     <!-- Overview Tab -->
@@ -182,7 +181,7 @@
     </div>
 
     <!-- Analytics Tab -->
-    <div x-cloak x-show="tab === 'analytics'" x-transition.opacity.duration.300ms class="space-y-8">
+    <div x-cloak x-show="tab === 'analytics'" x-init="$watch('tab', value => { if (value === 'analytics') setTimeout(() => window.dispatchEvent(new Event('resize')), 100) })" x-transition.opacity.duration.300ms class="space-y-8">
 
     <!-- Details Section -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -263,13 +262,4 @@
 
     </div>
 
-    <!-- Queue Tab -->
-    <div x-cloak x-show="tab === 'queue'" x-transition.opacity.duration.300ms class="space-y-8">
-
-    <!-- Job Review Queue -->
-    <div class="bg-slate-900/60 backdrop-blur-2xl rounded-[2rem] border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.2)] overflow-hidden p-6 transition-colors duration-500">
-        <livewire:job-review-queue />
-    </div>
-    
-    </div>
 </div>

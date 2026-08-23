@@ -42,6 +42,10 @@
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                 Job Preferences
             </button>
+            <button type="button" @click="tab = 'automation'" :class="tab === 'automation' ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-[0_0_15px_rgba(139,92,246,0.4)] border border-purple-500/50' : 'text-slate-400 hover:bg-white/5 hover:text-white border border-transparent'" class="w-full text-left px-5 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all duration-300 flex items-center">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Automation & Scheduling
+            </button>
             <button type="button" @click="tab = 'links'" :class="tab === 'links' ? 'bg-gradient-to-r from-neon-cyan to-blue-500 text-white shadow-[0_0_15px_rgba(34,211,238,0.4)] border border-neon-cyan/50' : 'text-slate-400 hover:bg-white/5 hover:text-white border border-transparent'" class="w-full text-left px-5 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all duration-300 flex items-center">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
                 Targeting & Links
@@ -288,6 +292,11 @@
                         </div>
                     </div>
                 </form>
+
+                <!-- TAB: Automation & Scheduling (Non-form, embeds a livewire component) -->
+                <div x-show="tab === 'automation'" class="h-full flex flex-col p-8 md:p-12" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
+                    <livewire:profile.automation-scheduler />
+                </div>
 
                 <!-- TAB: Integrations (Non-form) -->
                 <div x-show="tab === 'integrations'" class="h-full flex flex-col p-8 md:p-12" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">

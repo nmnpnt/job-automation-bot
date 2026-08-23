@@ -136,16 +136,25 @@ class UserProfile extends Component
         $cookieFile = $sessionDir . '/cookies.json';
         file_put_contents($cookieFile, $cookieJsonString);
         
-        $scriptPath = base_path('bot/authenticate.js');
-        $inputData = json_encode([
+        $scriptPath = base_path('bot/authenticate.py');
+        $pythonPath = base_path('bot/venv/Scripts/python.exe');
+        
+        $inputFile = $sessionDir . '/input.json';
+        file_put_contents($inputFile, json_encode([
             'platform' => strtoupper($platform),
             'session_dir' => $sessionDir,
             'cookie_file' => $cookieFile,
             'is_docker' => file_exists('/.dockerenv')
-        ]);
+        ]));
+
+        $env = array_merge($_SERVER, $_ENV);
+        $env['SYSTEMROOT'] = $env['SYSTEMROOT'] ?? 'C:\\WINDOWS';
+        $env['SYSTEMDRIVE'] = $env['SYSTEMDRIVE'] ?? 'C:';
+        $env['USERPROFILE'] = $env['USERPROFILE'] ?? getenv('USERPROFILE') ?: 'C:\\Users\\Naman';
+        $env['LOCALAPPDATA'] = $env['LOCALAPPDATA'] ?? getenv('LOCALAPPDATA') ?: 'C:\\Users\\Naman\\AppData\\Local';
 
         // Run synchronously to confirm cookie works
-        $process = new \Symfony\Component\Process\Process(['node', $scriptPath, $inputData]);
+        $process = new \Symfony\Component\Process\Process([$pythonPath, $scriptPath, $inputFile], null, $env);
         $process->setTimeout(60); 
         
         try {
@@ -153,6 +162,7 @@ class UserProfile extends Component
             
             // Combine both stdout and stderr to parse the output
             $outputStr = $process->getOutput() . "\n" . $process->getErrorOutput();
+            file_put_contents($sessionDir . '/debug_output.txt', $outputStr);
             $lines = array_filter(explode("\n", trim($outputStr)));
             
             $finalOutput = null;
@@ -169,15 +179,15 @@ class UserProfile extends Component
                 session()->flash("cookie_message_{$platform}", "{$platform} session saved and verified successfully!");
                 $this->platform_cookies[$platform] = ''; // clear it
             } else {
-                if (file_exists($cookieFile)) {
-                    unlink($cookieFile);
-                }
+                // if (file_exists($cookieFile)) {
+                //     unlink($cookieFile);
+                // }
                 session()->flash("cookie_error_{$platform}", $finalOutput['message'] ?? 'Failed to verify cookie.');
             }
         } catch (\Exception $e) {
-            if (file_exists($cookieFile)) {
-                unlink($cookieFile);
-            }
+            // if (file_exists($cookieFile)) {
+            //     unlink($cookieFile);
+            // }
             session()->flash("cookie_error_{$platform}", 'Cookie verification failed: ' . $e->getMessage());
         }
     }

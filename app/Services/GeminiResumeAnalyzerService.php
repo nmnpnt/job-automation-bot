@@ -14,7 +14,7 @@ class GeminiResumeAnalyzerService
         $this->aiService = $aiService;
     }
 
-    public function analyzeMatch(User $user, Application $application): string
+    public function analyzeMatch(User $user, Application $application): array
     {
         $profile = $user->profile;
         if (!$profile) {
@@ -24,7 +24,20 @@ class GeminiResumeAnalyzerService
         $prompt = $this->buildPrompt($profile, $application);
 
         try {
-            return $this->aiService->generateContent($prompt, 0.4, 1024, 3);
+            $feedback = $this->aiService->generateContent($prompt, 0.4, 1024, 3);
+            
+            // Extract the score using regex (looking for e.g. "Match Score: 85%" or "85%")
+            $score = null;
+            if (preg_match('/(?:Match\s*Score|Score).*?(?:[\*:\s]*)(100|[1-9]?[0-9])\s*%/i', $feedback, $matches)) {
+                $score = (int) $matches[1];
+            } elseif (preg_match('/(100|[1-9]?[0-9])\s*%/i', $feedback, $matches)) {
+                $score = (int) $matches[1];
+            }
+
+            return [
+                'feedback' => $feedback,
+                'score' => $score
+            ];
         } catch (\Exception $e) {
             \Log::error('Gemini API Error (Resume Analyzer)', ['exception' => $e->getMessage()]);
             throw new \Exception("Failed to generate resume feedback. " . $e->getMessage());

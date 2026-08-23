@@ -1,128 +1,39 @@
 version: '3.8'
 
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: job-automation-app
-    container_name: job-automation-app
-    restart: unless-stopped
-    working_dir: /var/www
-    volumes:
-      - ./:/var/www
-      - bot_sessions:/var/www/storage/app/bot-sessions
-    networks:
-      - job-automation
+  postgres:
+    image: postgres:15-alpine
+    container_name: job_automation_postgres
     environment:
-      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-      - DOCKER_ENV=true
-    depends_on:
-      - db
-      - redis
-
-  web:
-    image: nginx:alpine
-    container_name: job-automation-web
-    restart: unless-stopped
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: job_automation
     ports:
-      - "80:80"
+      - "5432:5432"
     volumes:
-      - ./:/var/www
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    networks:
-      - job-automation
-    depends_on:
-      - app
-
-  reverb:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: job-automation-reverb
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
-    working_dir: /var/www
-    command: php artisan reverb:start --host=0.0.0.0 --port=8081
-    ports:
-      - "8081:8081"
-    volumes:
-      - ./:/var/www
-    networks:
-      - job-automation
-    depends_on:
-      - redis
-      - db
-
-  db:
-    image: mysql:8.0
-    container_name: job-automation-db
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-job_automation}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
-      MYSQL_USER: ${DB_USERNAME:-job_automation}
-    ports:
-      - "3306:3306"
-    volumes:
-      - dbdata:/var/lib/mysql
-    networks:
-      - job-automation
 
   redis:
-    image: redis:alpine
-    container_name: job-automation-redis
-    restart: unless-stopped
+    image: redis:7-alpine
+    container_name: job_automation_redis
     ports:
       - "6379:6379"
     volumes:
-      - redisdata:/data
-    networks:
-      - job-automation
-
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: job-automation-worker
+      - redis_data:/data
     restart: unless-stopped
-    working_dir: /var/www
-    user: "www-data"
-    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
-    volumes:
-      - ./:/var/www
-      - bot_sessions:/var/www/storage/app/bot-sessions
-    networks:
-      - job-automation
-    depends_on:
-      - redis
-      - db
-    environment:
-      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-      - DOCKER_ENV=true
 
-  scheduler:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: job-automation-scheduler
+  scraper:
+    build: 
+      context: ./bot
+    container_name: job_automation_scraper
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./bot:/app
+      - ./storage/app/bot-sessions:/app/sessions
     restart: unless-stopped
-    working_dir: /var/www
-    user: "www-data"
-    command: php artisan schedule:work
-    volumes:
-      - ./:/var/www
-    networks:
-      - job-automation
-    depends_on:
-      - redis
-      - db
-
-networks:
-  job-automation:
-    driver: bridge
 
 volumes:
-  dbdata:
-  redisdata:
-  bot_sessions:
+  postgres_data:
+  redis_data:

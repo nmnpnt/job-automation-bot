@@ -123,6 +123,23 @@ class InterviewsList extends Component
         }
     }
 
+    public function changeStatus($jobId, $newStatus)
+    {
+        try {
+            $job = Application::findOrFail($jobId);
+            $job->update(['status' => $newStatus]);
+            
+            $job->events()->create([
+                'event_type' => 'STATUS_CHANGED',
+                'message' => "Application status changed to {$newStatus} via Kanban board."
+            ]);
+            
+            $this->dispatch('notify', ['message' => 'Status updated successfully!', 'type' => 'success']);
+        } catch (\Exception $e) {
+            $this->dispatch('notify', ['message' => 'Error: ' . $e->getMessage(), 'type' => 'error']);
+        }
+    }
+
     #[On('echo:activity-feed,.ActivityLogged')]
     public function refreshList()
     {
@@ -133,13 +150,27 @@ class InterviewsList extends Component
     {
         $userId = auth()->id();
         
-        $interviews = Application::where('user_id', $userId)
-            ->whereIn('status', ['INTERVIEW_REQUESTED', 'INTERVIEW_COMPLETED'])
-            ->orderBy('interview_scheduled_at', 'asc')
-            ->paginate(15);
+        $applications = Application::where('user_id', $userId)
+            ->whereIn('status', [
+                'APPLIED', 
+                'INTERVIEW_REQUESTED', 
+                'INTERVIEW_COMPLETED', 
+                'REJECTED', 
+                'OFFER_RECEIVED'
+            ])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        $kanbanBoard = [
+            'APPLIED' => $applications->where('status', 'APPLIED'),
+            'INTERVIEW_REQUESTED' => $applications->where('status', 'INTERVIEW_REQUESTED'),
+            'INTERVIEW_COMPLETED' => $applications->where('status', 'INTERVIEW_COMPLETED'),
+            'REJECTED' => $applications->where('status', 'REJECTED'),
+            'OFFER_RECEIVED' => $applications->where('status', 'OFFER_RECEIVED'),
+        ];
 
         return view('livewire.interviews-list', [
-            'interviews' => $interviews,
+            'kanbanBoard' => $kanbanBoard,
         ])->layout('layouts.app');
     }
 }

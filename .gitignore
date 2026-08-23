@@ -21,6 +21,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/framework/views/
 /vendor
 _ide_helper.php
 Homestead.json
@@ -29,3 +30,40 @@ Thumbs.db
 scratch/
 test_api.php
 test_ats.php
+
+# Local dependencies and binaries
+/bin/
+Redis.zip
+bot/__pycache__/
+bot/.pytest_cache/
+
+# Loose test & scratch scripts (root level)
+test_*.py
+test_*.php
+check_*.php
+dump_*.py
+inspect_*.py
+find_*.py
+rewrite_*.py
+fix_indent*.py
+analyze_*.py
+run_scraper.php
+
+# Dump / debug output files
+*.json
+!composer.json
+!package.json
+!package-lock.json
+*.html
+!resources/**/*.html
+bot/naukri_*.html
+bot/temp_*.json
+*_dump.*
+*_data.json
+test_output.txt
+
+# Binaries
+cloudflared.exe
+
+# Bot temp files
+bot/temp_input.json

@@ -56,7 +56,7 @@ class JobDetails extends Component
     {
         $this->isFetchingDetails = true;
         try {
-            $orchestrator = app(\App\Services\PuppeteerOrchestrator::class);
+            $orchestrator = app(\App\Services\ScraperOrchestrator::class);
             $success = $orchestrator->fetchJobDetails($this->job);
             if ($success) {
                 $this->job->refresh();
@@ -75,7 +75,7 @@ class JobDetails extends Component
         if (empty($this->job->description) && !empty($this->job->original_job_url)) {
             $this->isFetchingDetails = true;
             try {
-                $orchestrator = app(\App\Services\PuppeteerOrchestrator::class);
+                $orchestrator = app(\App\Services\ScraperOrchestrator::class);
                 $success = $orchestrator->fetchJobDetails($this->job);
                 if ($success) {
                     $this->job->refresh(); // get updated description
@@ -120,10 +120,17 @@ class JobDetails extends Component
         $this->isAnalyzing = true;
         try {
             $service = app(\App\Services\GeminiResumeAnalyzerService::class);
-            $this->generatedFeedback = $service->analyzeMatch(auth()->user(), $this->job);
+            $result = $service->analyzeMatch(auth()->user(), $this->job);
             
-            // Optionally save it to the job model
-            $this->job->update(['resume_feedback' => $this->generatedFeedback]);
+            $this->generatedFeedback = $result['feedback'];
+            
+            // Save both feedback and score to the job model
+            $updateData = ['resume_feedback' => $this->generatedFeedback];
+            if ($result['score'] !== null) {
+                $updateData['match_score'] = $result['score'];
+            }
+            
+            $this->job->update($updateData);
         } catch (\Exception $e) {
             $this->generatedFeedback = "Error analyzing resume match: " . $e->getMessage();
         }

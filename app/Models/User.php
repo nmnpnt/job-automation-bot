@@ -12,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'is_admin'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -29,6 +29,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
     }
 
@@ -50,6 +51,21 @@ class User extends Authenticatable
     public function applications()
     {
         return $this->hasMany(Application::class);
+    }
+
+    public function activities()
+    {
+        return $this->hasMany(UserActivity::class);
+    }
+
+    public function scrapingSchedules()
+    {
+        return $this->hasMany(ScrapingSchedule::class);
+    }
+
+    public function scrapingJobs()
+    {
+        return $this->hasMany(ScrapingJob::class);
     }
 
     public function routeNotificationForSlack(Notification $notification): mixed

@@ -19,7 +19,7 @@
             body { font-family: 'Inter', sans-serif; }
         </style>
     </head>
-    <body class="text-white antialiased overflow-hidden selection:bg-brand-500 selection:text-white bg-[#030014]">
+    <body class="text-white antialiased overflow-x-hidden overflow-y-auto selection:bg-brand-500 selection:text-white bg-[#030014]">
         
         <!-- Global Animated Background -->
         <div class="fixed inset-0 z-0 bg-[#030014]">

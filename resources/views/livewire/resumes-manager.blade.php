@@ -1,3 +1,20 @@
+<style>
+    .hud-border {
+        position: relative;
+    }
+    .hud-border::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(139,92,246,0.5), rgba(34,211,238,0.5), rgba(244,114,182,0.5));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+</style>
 <div>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-white leading-tight">
@@ -7,14 +24,14 @@
 
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         
-        <div class="bg-slate-900/60 backdrop-blur-xl overflow-hidden shadow-[0_0_15px_rgba(0,0,0,0.5)] sm:rounded-2xl p-6 border border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="bg-slate-900/60 backdrop-blur-xl overflow-hidden shadow-[0_0_15px_rgba(0,0,0,0.5)] sm:rounded-2xl hud-border p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h3 class="text-xl font-black text-white">Manage Your Resumes</h3>
                 <p class="text-sm text-slate-400">Create tailored resumes for different types of jobs.</p>
             </div>
             
-            <form wire:submit.prevent="createResume" class="flex gap-2 w-full md:w-auto">
-                <input type="text" wire:model="newResumeTitle" placeholder="e.g. Frontend Developer" class="bg-slate-800/50 rounded-xl border border-white/10 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-white sm:text-sm flex-1 placeholder-slate-500">
+            <form wire:submit.prevent="createResume" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                <input type="text" wire:model="newResumeTitle" placeholder="e.g. Frontend Developer" class="bg-slate-800/50 rounded-xl border border-white/10 shadow-sm focus:border-brand-500 focus:ring-brand-500 text-white sm:text-sm flex-1 placeholder-slate-500 min-w-0">
                 <button type="submit" class="bg-brand-600 hover:bg-brand-500 text-white font-bold py-2 px-4 rounded-xl whitespace-nowrap transition-colors shadow-[0_0_15px_rgba(139,92,246,0.3)]">
                     Create Resume
                 </button>
@@ -23,7 +40,7 @@
         </div>
 
         @if($profile && $profile->resume_path)
-        <div class="bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)] rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center mb-6 relative overflow-hidden">
+        <div class="bg-slate-900/60 backdrop-blur-xl hud-border shadow-[0_0_15px_rgba(0,0,0,0.5)] rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center mb-6 relative overflow-hidden">
             <div class="absolute -right-10 -top-10 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl"></div>
             <div class="flex items-center gap-4 relative z-10">
                 <div class="bg-brand-500/20 p-3 rounded-xl text-brand-400 border border-brand-500/30">
@@ -44,7 +61,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($resumes as $resume)
-                <div class="bg-slate-900/60 backdrop-blur-xl overflow-hidden shadow-[0_0_15px_rgba(0,0,0,0.5)] sm:rounded-2xl border border-white/10 flex flex-col hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:border-brand-500/50 transition-all group">
+                <div class="bg-slate-900/60 backdrop-blur-xl overflow-hidden shadow-[0_0_15px_rgba(0,0,0,0.5)] sm:rounded-2xl hud-border flex flex-col hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all group">
                     <div class="p-6 flex-1 relative overflow-hidden">
                         <div class="absolute -right-4 -top-4 w-20 h-20 bg-brand-500/5 rounded-full blur-xl group-hover:bg-brand-500/10 transition-colors"></div>
                         <div class="flex justify-between items-start mb-4 relative z-10">
@@ -66,7 +83,7 @@
                     </div>
                 </div>
             @empty
-                <div class="col-span-full bg-slate-900/60 backdrop-blur-xl overflow-hidden shadow-[0_0_15px_rgba(0,0,0,0.5)] sm:rounded-2xl p-10 text-center border border-dashed border-white/20">
+                <div class="col-span-full bg-slate-900/60 backdrop-blur-xl overflow-hidden shadow-[0_0_15px_rgba(0,0,0,0.5)] sm:rounded-2xl p-10 text-center hud-border">
                     <svg class="w-12 h-12 mx-auto text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     <p class="text-lg font-black text-white mb-1">No resumes found</p>
                     <p class="text-slate-400 font-medium">Create your first resume to get started.</p>

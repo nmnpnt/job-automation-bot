@@ -1,0 +1,29 @@
+@echo off
+echo Starting Job Automation System...
+
+echo Starting PostgreSQL...
+start "PostgreSQL" cmd /c "bin\pgsql\bin\postgres.exe -D bin\pgsql\data"
+
+echo Starting Redis...
+start "Redis" cmd /c "bin\redis\redis-server.exe"
+
+echo Starting Laravel Web Server...
+start "Laravel Server" cmd /c "php artisan serve"
+
+echo Starting Vite Frontend Server...
+start "Vite Server" cmd /c "npm run dev"
+
+echo Starting Queue Worker...
+start "Queue Worker" cmd /c "php artisan queue:work"
+
+echo Starting Schedule Worker...
+start "Schedule Worker" cmd /c "php artisan schedule:work"
+
+echo Starting Reverb WebSocket Server...
+start "Reverb Server" cmd /c "php artisan reverb:start"
+
+echo Starting Cloudflare Tunnel...
+start "Cloudflare Tunnel" cmd /c "cloudflared tunnel --url http://localhost:8000"
+
+echo All services started successfully!
+pause

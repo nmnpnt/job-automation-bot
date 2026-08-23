@@ -17,8 +17,8 @@ new class extends Component
 }; ?>
 
 <aside :class="{
-        'translate-x-0': mobileSidebarOpen,
-        '-translate-x-full': !mobileSidebarOpen,
+        'translate-x-0 w-72': mobileSidebarOpen,
+        '-translate-x-full w-72': !mobileSidebarOpen,
         'lg:translate-x-0 lg:w-72': sidebarOpen,
         'lg:translate-x-0 lg:w-20': !sidebarOpen
     }" 
@@ -78,6 +78,13 @@ new class extends Component
             <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('ATS Analyzer') }}</span>
         </a>
 
+        <!-- Settings -->
+        <a href="{{ route('settings') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-300 {{ request()->routeIs('settings') ? 'bg-gradient-to-r from-brand-500/20 to-transparent border-l-[3px] border-neon-cyan text-brand-100 font-bold shadow-[inset_4px_0_10px_rgba(34,211,238,0.15)]' : 'hover:bg-brand-900/40 hover:text-white text-slate-300 border-l-[3px] border-transparent hover:border-brand-500/50' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Settings">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('settings') ? 'text-neon-cyan filter drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-slate-400 group-hover:text-brand-300 group-hover:drop-shadow-[0_0_5px_rgba(167,139,250,0.5)]' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Settings') }}</span>
+        </a>
+
+        @if(auth()->user()->is_admin)
         <div x-show="sidebarOpen" x-transition class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-8 px-3 whitespace-nowrap">System & Tools</div>
         <div x-show="!sidebarOpen" class="border-t border-slate-700/50 w-8 mx-auto my-4"></div>
 
@@ -85,12 +92,6 @@ new class extends Component
         <a href="{{ route('automations') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-300 {{ request()->routeIs('automations') ? 'bg-gradient-to-r from-brand-500/20 to-transparent border-l-[3px] border-neon-cyan text-brand-100 font-bold shadow-[inset_4px_0_10px_rgba(34,211,238,0.15)]' : 'hover:bg-brand-900/40 hover:text-white text-slate-300 border-l-[3px] border-transparent hover:border-brand-500/50' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Automations">
             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('automations') ? 'text-neon-cyan filter drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-slate-400 group-hover:text-brand-300 group-hover:drop-shadow-[0_0_5px_rgba(167,139,250,0.5)]' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Automations') }}</span>
-        </a>
-
-        <!-- Settings -->
-        <a href="{{ route('settings') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-300 {{ request()->routeIs('settings') ? 'bg-gradient-to-r from-brand-500/20 to-transparent border-l-[3px] border-neon-cyan text-brand-100 font-bold shadow-[inset_4px_0_10px_rgba(34,211,238,0.15)]' : 'hover:bg-brand-900/40 hover:text-white text-slate-300 border-l-[3px] border-transparent hover:border-brand-500/50' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Settings">
-            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('settings') ? 'text-neon-cyan filter drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-slate-400 group-hover:text-brand-300 group-hover:drop-shadow-[0_0_5px_rgba(167,139,250,0.5)]' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Settings') }}</span>
         </a>
 
         <!-- System Logs -->
@@ -103,6 +104,18 @@ new class extends Component
         <a href="{{ route('queue-monitor') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-300 {{ request()->routeIs('queue-monitor') ? 'bg-gradient-to-r from-brand-500/20 to-transparent border-l-[3px] border-neon-cyan text-brand-100 font-bold shadow-[inset_4px_0_10px_rgba(34,211,238,0.15)]' : 'hover:bg-brand-900/40 hover:text-white text-slate-300 border-l-[3px] border-transparent hover:border-brand-500/50' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Queue Monitor">
             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('queue-monitor') ? 'text-neon-cyan filter drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-slate-400 group-hover:text-brand-300 group-hover:drop-shadow-[0_0_5px_rgba(167,139,250,0.5)]' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Queue Monitor') }}</span>
+        </a>
+
+        <!-- Global Users -->
+        <a href="{{ route('admin.users.index') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-300 {{ request()->routeIs('admin.users.*') ? 'bg-gradient-to-r from-brand-500/20 to-transparent border-l-[3px] border-neon-cyan text-brand-100 font-bold shadow-[inset_4px_0_10px_rgba(34,211,238,0.15)]' : 'hover:bg-brand-900/40 hover:text-white text-slate-300 border-l-[3px] border-transparent hover:border-brand-500/50' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Global Users">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('admin.users.*') ? 'text-neon-cyan filter drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-slate-400 group-hover:text-brand-300 group-hover:drop-shadow-[0_0_5px_rgba(167,139,250,0.5)]' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Global Users') }}</span>
+        </a>
+
+        <!-- Global Schedules -->
+        <a href="{{ route('admin.schedules.index') }}" wire:navigate class="group flex items-center py-2.5 rounded-xl transition-all duration-300 {{ request()->routeIs('admin.schedules.*') ? 'bg-gradient-to-r from-brand-500/20 to-transparent border-l-[3px] border-neon-cyan text-brand-100 font-bold shadow-[inset_4px_0_10px_rgba(34,211,238,0.15)]' : 'hover:bg-brand-900/40 hover:text-white text-slate-300 border-l-[3px] border-transparent hover:border-brand-500/50' }}" :class="{'px-3': sidebarOpen, 'justify-center': !sidebarOpen}" title="Global Schedules">
+            <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('admin.schedules.*') ? 'text-neon-cyan filter drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-slate-400 group-hover:text-brand-300 group-hover:drop-shadow-[0_0_5px_rgba(167,139,250,0.5)]' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Global Schedules') }}</span>
         </a>
 
         <div x-show="sidebarOpen" x-transition class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-8 px-3 whitespace-nowrap">Documentation</div>
@@ -119,6 +132,7 @@ new class extends Component
             <svg class="w-5 h-5 flex-shrink-0 {{ request()->routeIs('architecture') ? 'text-neon-cyan filter drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'text-slate-400 group-hover:text-brand-300 group-hover:drop-shadow-[0_0_5px_rgba(167,139,250,0.5)]' }}" :class="{'mr-3': sidebarOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
             <span x-show="sidebarOpen" class="whitespace-nowrap transition-opacity duration-300">{{ __('Architecture') }}</span>
         </a>
+        @endif
 
 
     </div>

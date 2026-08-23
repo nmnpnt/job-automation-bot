@@ -37,7 +37,7 @@ new class extends Component
         </button>
 
         <!-- Dropdown -->
-        <div x-show="open" x-transition.opacity style="display: none;" class="absolute right-0 mt-2 w-96 bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden">
+        <div x-show="open" x-transition.opacity style="display: none;" class="fixed left-4 right-4 top-16 sm:absolute sm:inset-auto sm:right-0 sm:mt-2 sm:w-96 bg-slate-900/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden origin-top sm:origin-top-right">
             <div class="px-4 py-3 bg-gradient-to-r from-brand-900/50 to-transparent border-b border-white/10 flex justify-between items-center gap-4">
                 <h3 class="text-sm font-black text-white bg-clip-text text-transparent bg-gradient-to-r from-brand-400 to-neon-cyan">Notifications</h3>
                 @if(auth()->user()->unreadNotifications->count() > 0)

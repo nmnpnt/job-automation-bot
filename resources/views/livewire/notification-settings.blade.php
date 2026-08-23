@@ -20,9 +20,9 @@
         </div>
 
         <form wire:submit.prevent="save">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Event Triggers Column -->
-                <div class="lg:col-span-2 space-y-6">
+                <div class="space-y-6">
                     
                     <div class="bg-slate-900/60 backdrop-blur-xl rounded-[2rem] p-8 shadow-[0_10px_30px_rgba(0,0,0,0.3)] border border-white/10 relative overflow-hidden group transition-colors duration-300">
                         <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-brand-500 to-neon-cyan"></div>
@@ -52,10 +52,20 @@
                                     <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"></div>
                                 </label>
                             </div>
+
+                            <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-brand-500/30 transition-all duration-300">
+                                <div>
+                                    <h4 class="text-sm font-black text-white uppercase tracking-wider">High Match Auto-Applies</h4>
+                                    <p class="text-xs text-slate-400 font-medium mt-1">Get an alert when the bot discovers a job with match score >= 85%.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer ml-4">
+                                    <input type="checkbox" wire:model="notify_on_high_match" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500 shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"></div>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
-
                 <!-- Channels Column -->
                 <div class="space-y-6">
                     <div class="bg-slate-900/60 backdrop-blur-xl rounded-[2rem] p-8 shadow-[0_10px_30px_rgba(0,0,0,0.3)] border border-white/10 relative overflow-hidden group transition-colors duration-300">

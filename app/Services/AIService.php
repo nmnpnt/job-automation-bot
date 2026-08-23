@@ -22,7 +22,7 @@ class AIService
      * @return string
      * @throws \Exception
      */
-    public function generateContent(string $prompt, float $temperature = 0.7, int $maxTokens = 1000, int $maxRetries = 3): string
+    public function generateContent(string $prompt, float $temperature = 0.7, int $maxTokens = 1000, int $maxRetries = 3, bool $isJson = false): string
     {
         $apiKey = config('services.gemini.api_key');
 
@@ -33,6 +33,15 @@ class AIService
 
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key={$apiKey}";
         
+        $generationConfig = [
+            'temperature' => $temperature,
+            'maxOutputTokens' => $maxTokens,
+        ];
+        
+        if ($isJson) {
+            $generationConfig['responseMimeType'] = 'application/json';
+        }
+
         $payload = [
             'contents' => [
                 [
@@ -41,67 +50,46 @@ class AIService
                     ]
                 ]
             ],
-            'generationConfig' => [
-                'temperature' => $temperature,
-                'maxOutputTokens' => $maxTokens,
-            ]
+            'generationConfig' => $generationConfig
         ];
 
-        $attempt = 0;
-        $delay = 1000; // start with 1 second delay
+        // Use Laravel's built-in retry mechanism: 3 times, 1000ms delay, returning true if status is 429 or 50x
+        $response = Http::withoutVerifying()
+            ->timeout(30)
+            ->retry($maxRetries, 1000, function ($exception, $request) {
+                if ($exception instanceof \Illuminate\Http\Client\ConnectionException) {
+                    return true;
+                }
+                
+                $response = $exception->response ?? null;
+                if ($response) {
+                    return in_array($response->status(), [429, 500, 502, 503, 504]);
+                }
+                
+                return false;
+            })
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+            ])
+            ->post($url, $payload);
 
-        while ($attempt < $maxRetries) {
-            $attempt++;
+        if ($response->successful()) {
+            $data = $response->json();
             
-            try {
-                // We use withoutVerifying() for local dev issues with cURL/SSL on Windows
-                $response = Http::withoutVerifying()
-                    ->timeout(30)
-                    ->withHeaders([
-                        'Content-Type' => 'application/json',
-                    ])
-                    ->post($url, $payload);
-
-                if ($response->successful()) {
-                    $data = $response->json();
-                    
-                    if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
-                        return trim($data['candidates'][0]['content']['parts'][0]['text']);
-                    }
-                    
-                    Log::error("Attempt {$attempt}: Gemini API returned unexpected format.", ['response' => $data]);
-                    throw new \Exception("Failed to parse AI response.");
-                }
-
-                $status = $response->status();
-                Log::error("Attempt {$attempt}: Gemini API failed with status {$status}", [
-                    'body' => $response->body()
-                ]);
-                
-                // If it's a 429 (Rate Limit) or 503 (Service Unavailable), we should retry
-                if (in_array($status, [429, 500, 502, 503, 504])) {
-                    if ($attempt < $maxRetries) {
-                        usleep($delay * 1000); // usleep takes microseconds
-                        $delay *= 2; // Exponential backoff
-                        continue;
-                    }
-                }
-                
-                // For other errors (400, 403, 404) or if max retries reached, throw
-                throw new \Exception("Gemini API Error ({$status}): " . $response->body());
-                
-            } catch (\Illuminate\Http\Client\ConnectionException $e) {
-                Log::error("Attempt {$attempt}: Connection exception: " . $e->getMessage());
-                if ($attempt < $maxRetries) {
-                    usleep($delay * 1000);
-                    $delay *= 2;
-                    continue;
-                }
-                throw new \Exception("Connection to AI service failed.");
+            if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                return trim($data['candidates'][0]['content']['parts'][0]['text']);
             }
+            
+            Log::error("Gemini API returned unexpected format.", ['response' => $data]);
+            throw new \Exception("Failed to parse AI response.");
         }
 
-        throw new \Exception("AI service unavailable after {$maxRetries} attempts.");
+        $status = $response->status();
+        Log::error("Gemini API failed with status {$status}", [
+            'body' => $response->body()
+        ]);
+        
+        throw new \Exception("Gemini API Error ({$status}): " . $response->body());
     }
 
     /**
@@ -112,7 +100,7 @@ class AIService
         // Enforce JSON in prompt
         $prompt .= "\n\nIMPORTANT: Return ONLY valid JSON. Do not include markdown formatting (like ```json), just the raw JSON string.";
         
-        $response = $this->generateContent($prompt, $temperature, $maxTokens);
+        $response = $this->generateContent($prompt, $temperature, $maxTokens, 3, true);
         
         // Clean up potential markdown formatting that the LLM might stubbornly include
         $response = preg_replace('/```json/i', '', $response);

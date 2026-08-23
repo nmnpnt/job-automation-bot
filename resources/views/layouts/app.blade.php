@@ -54,11 +54,11 @@
             <div class="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-neon-pink/20 blur-[100px] animate-pulse-glow" style="animation-delay: 4s;"></div>
         </div>
         
-        <!-- Mobile Sidebar Backdrop -->
-        <div x-show="mobileSidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-slate-900/80 backdrop-blur-sm lg:hidden" @click="mobileSidebarOpen = false" x-cloak></div>
-
         <div class="flex h-full relative z-10">
             
+            <!-- Mobile Sidebar Backdrop -->
+            <div x-show="mobileSidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-slate-900/80 backdrop-blur-sm lg:hidden" @click="mobileSidebarOpen = false" x-cloak></div>
+
             <!-- Sidebar Component -->
             <livewire:layout.navigation />
 

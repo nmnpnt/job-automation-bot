@@ -1,4 +1,21 @@
 <div>
+<style>
+    .hud-border {
+        position: relative;
+    }
+    .hud-border::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(139,92,246,0.5), rgba(34,211,238,0.5), rgba(244,114,182,0.5));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+</style>
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div class="flex items-center">
@@ -29,12 +46,21 @@
 
     <div class="max-w-5xl mx-auto space-y-6">
         <!-- Header Card -->
-        <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] sm:rounded-[2rem] border border-white/10 p-6 md:p-10 relative group transition-all duration-500">
-            <div class="absolute inset-0 bg-gradient-to-br from-brand-500/10 to-neon-cyan/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] sm:rounded-[2rem] hud-border p-6 md:p-10 relative group transition-all duration-500">
+            <div class="absolute inset-0 bg-gradient-to-br from-brand-500/10 to-neon-cyan/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            <div class="absolute top-0 right-0 w-64 h-64 bg-neon-cyan/5 rounded-full blur-[60px] pointer-events-none mix-blend-screen"></div>
             
             <div class="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div>
-                    <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">{{ $job->job_title }}</h1>
+                    <div class="flex items-center gap-4 flex-wrap mb-2">
+                        <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">{{ $job->job_title }}</h1>
+                        @if($job->match_score)
+                            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border {{ $job->match_score >= 80 ? 'bg-neon-cyan/20 text-neon-cyan border-neon-cyan/30 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : ($job->match_score >= 50 ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : 'bg-neon-pink/20 text-neon-pink border-neon-pink/30 shadow-[0_0_15px_rgba(244,114,182,0.3)]') }}" title="{{ $job->match_reason }}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <span class="text-sm font-black tracking-widest uppercase">{{ $job->match_score }}% Match</span>
+                            </div>
+                        @endif
+                    </div>
                     <div class="mt-3 text-lg text-slate-300 font-bold flex items-center gap-2">
                         <svg class="w-5 h-5 text-neon-cyan drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                         {{ $job->company_name }}
@@ -87,7 +113,8 @@
             <!-- Main Content Area -->
             <div class="lg:col-span-2 space-y-6">
                 <!-- Job Description Section -->
-                <div class="bg-slate-900/60 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] border border-white/10 p-6 md:p-8">
+                <div class="bg-slate-900/60 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] hud-border p-6 md:p-8 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-sm font-black uppercase tracking-widest text-brand-400 flex items-center">
                             <div class="p-1.5 bg-brand-500/20 text-brand-300 rounded-lg mr-3 shadow-[0_0_10px_rgba(139,92,246,0.3)]">
@@ -132,7 +159,8 @@
 
                 @if($job->responsibilities || $job->skills_required || $job->qualifications)
                 <!-- Requirements Section -->
-                <div class="bg-slate-900/60 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] border border-white/10 p-6 md:p-8 space-y-10">
+                <div class="bg-slate-900/60 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] hud-border p-6 md:p-8 space-y-10 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                     @if($job->responsibilities)
                     <div>
                         <h3 class="text-sm font-black uppercase tracking-widest text-emerald-400 mb-5 flex items-center">
@@ -190,7 +218,7 @@
             <!-- Sidebar Info -->
             <div class="space-y-6">
                 <!-- Meta Data Card -->
-                <div class="bg-slate-900/60 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] border border-white/10 p-6 relative overflow-hidden group">
+                <div class="bg-slate-900/60 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] hud-border p-6 relative overflow-hidden group">
                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <svg class="w-24 h-24 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                     </div>
@@ -240,7 +268,7 @@
                 </div>
 
                 <!-- AI Analysis Card -->
-                <div class="relative bg-slate-900 rounded-[2rem] p-[1px] overflow-hidden group shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                <div class="relative bg-slate-900 rounded-[2rem] p-[1px] overflow-hidden group shadow-[0_10px_40px_rgba(0,0,0,0.5)] hud-border">
                     <!-- Animated gradient border -->
                     <div class="absolute inset-0 bg-gradient-to-br from-neon-cyan via-brand-500 to-neon-pink opacity-50 group-hover:opacity-100 transition-opacity duration-700 blur-sm"></div>
                     <div class="absolute inset-[-100%] bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[spin_3s_linear_infinite] group-hover:opacity-100 opacity-0 transition-opacity"></div>
@@ -320,7 +348,8 @@
                 
                 <!-- Events Timeline -->
                 @if($job->events->count() > 0)
-                <div class="bg-slate-900/60 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] border border-white/10 p-6">
+                <div class="bg-slate-900/60 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] hud-border p-6 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-neon-cyan/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                     <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6">Timeline</h3>
                     <div class="relative border-l-2 border-slate-700 ml-3 space-y-8">
                         @foreach($job->events->sortByDesc('created_at') as $event)

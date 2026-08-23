@@ -1,3 +1,20 @@
+<style>
+    .hud-border {
+        position: relative;
+    }
+    .hud-border::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(139,92,246,0.5), rgba(34,211,238,0.5), rgba(244,114,182,0.5));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+</style>
 <div>
     <x-slot name="header">
         <div class="flex items-center justify-between">
@@ -15,8 +32,8 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Setup Column -->
             <div class="lg:col-span-1 space-y-6">
-                <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] border border-white/10 p-6 relative group transition-all duration-500 hover:border-brand-500/30">
-                    <div class="absolute inset-0 bg-gradient-to-br from-brand-500/10 to-neon-cyan/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] hud-border p-6 relative group transition-all duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-br from-brand-500/10 to-neon-cyan/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                     <div class="relative z-10">
                         <h3 class="text-xl font-black text-white tracking-wide mb-6 flex items-center">
                             <div class="p-2 bg-brand-500/20 text-brand-400 rounded-xl mr-3 shadow-[0_0_15px_rgba(139,92,246,0.3)]">
@@ -91,8 +108,8 @@
             <!-- Results Column -->
             <div class="lg:col-span-2 space-y-6">
                 @if($isAnalyzing)
-                    <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] border border-brand-500/30 p-10 flex flex-col items-center justify-center text-center h-full min-h-[500px] relative">
-                        <div class="absolute inset-0 bg-brand-500/10 rounded-[2rem] animate-pulse"></div>
+                    <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] hud-border p-10 flex flex-col items-center justify-center text-center h-full min-h-[500px] relative">
+                        <div class="absolute inset-0 bg-brand-500/10 rounded-[2rem] animate-pulse pointer-events-none"></div>
                         <div class="relative z-10 flex flex-col items-center">
                             <!-- AI Mascot Avatar -->
                             <div class="w-32 h-32 rounded-full mb-8 relative group">
@@ -108,7 +125,7 @@
                     </div>
                 @elseif($analysisResult)
                     <!-- Mascot Message -->
-                    <div class="bg-slate-900/60 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 flex items-start gap-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                    <div class="bg-slate-900/60 backdrop-blur-2xl rounded-3xl hud-border p-6 flex items-start gap-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
                         <div class="w-16 h-16 rounded-full shrink-0 relative">
                             <div class="absolute inset-0 bg-brand-500/50 rounded-full blur-md"></div>
                             <img src="{{ asset('images/ai-mascot.jpg') }}" alt="Aria" class="w-full h-full object-cover rounded-full border-2 border-brand-400 relative z-10">
@@ -125,7 +142,7 @@
 
                     <!-- Score Overview -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] border border-white/10 p-6 relative group hover:border-brand-500/30 transition-all duration-500">
+                        <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] hud-border p-6 relative group transition-all duration-500">
                             <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center drop-shadow-md">
                                 <div class="w-2.5 h-2.5 rounded-full bg-brand-500 mr-3 shadow-[0_0_8px_rgba(139,92,246,0.8)]"></div>
                                 Overall ATS Score
@@ -155,7 +172,7 @@
                             </div>
                         </div>
                         
-                        <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] border border-white/10 p-6 relative group hover:border-brand-500/30 transition-all duration-500">
+                        <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] hud-border p-6 relative group transition-all duration-500">
                             <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center drop-shadow-md">
                                 <div class="w-2.5 h-2.5 rounded-full bg-neon-cyan mr-3 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
                                 Keyword Match
@@ -187,7 +204,7 @@
                     </div>
 
                     <!-- Details -->
-                    <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] border border-white/10 p-6 md:p-8 space-y-10 relative">
+                    <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] hud-border p-6 md:p-8 space-y-10 relative">
                         <!-- Neon decoration -->
                         <div class="absolute right-0 top-0 w-64 h-64 bg-brand-500/10 rounded-bl-full -mr-20 -mt-20 blur-3xl pointer-events-none"></div>
 
@@ -244,8 +261,8 @@
                     </div>
                 @else
                     <!-- Empty State -->
-                    <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] border-2 border-dashed border-white/20 p-10 text-center flex flex-col justify-center items-center h-full min-h-[500px] relative group hover:border-brand-500/40 transition-colors duration-500">
-                        <div class="absolute inset-0 bg-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                    <div class="bg-slate-900/60 backdrop-blur-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2rem] hud-border p-10 text-center flex flex-col justify-center items-center h-full min-h-[500px] relative group transition-colors duration-500">
+                        <div class="absolute inset-0 bg-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
                         <div class="relative z-10 flex flex-col items-center">
                             <!-- Inactive Mascot avatar -->
                             <div class="w-24 h-24 rounded-full mb-6 bg-slate-800 border-4 border-slate-700 relative flex items-center justify-center shadow-inner overflow-hidden">

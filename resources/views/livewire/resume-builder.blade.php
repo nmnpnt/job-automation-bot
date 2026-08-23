@@ -1,3 +1,20 @@
+<style>
+    .hud-border {
+        position: relative;
+    }
+    .hud-border::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(139,92,246,0.5), rgba(34,211,238,0.5), rgba(244,114,182,0.5));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+</style>
 <div>
     <x-slot name="header">
         <div class="flex items-center justify-between">
@@ -13,7 +30,7 @@
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         
         <!-- Toolbar -->
-        <div class="bg-slate-900/60 backdrop-blur-2xl rounded-[2rem] border border-white/10 p-6 flex justify-between items-center shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+        <div class="bg-slate-900/60 backdrop-blur-2xl rounded-[2rem] hud-border p-6 flex justify-between items-center shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
             <div>
                 <h3 class="text-xl font-black text-white tracking-wide">Resume Sections</h3>
                 <p class="text-sm text-slate-400 font-bold mt-1">Manage the content of your resume.</p>
@@ -30,7 +47,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             
             <!-- Add Section Form -->
-            <div class="bg-black/40 backdrop-blur-xl rounded-[2rem] border border-white/5 p-6 md:col-span-1 h-fit shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)]">
+            <div class="bg-black/40 backdrop-blur-xl rounded-[2rem] hud-border p-6 md:col-span-1 h-fit shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)]">
                 <h4 class="font-black text-lg text-white mb-6 uppercase tracking-wider flex items-center">
                     <svg class="w-5 h-5 mr-2 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     Add Section
@@ -145,8 +162,9 @@
             <!-- Sections List -->
             <div class="md:col-span-2 space-y-4">
                 @forelse($sections as $section)
-                    <div class="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-6 relative group hover:border-brand-500/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300">
-                        <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="bg-slate-900/40 backdrop-blur-md rounded-2xl hud-border p-6 relative group hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300">
+                        <div class="absolute inset-0 bg-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-2xl"></div>
+                        <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                             <button wire:click="deleteSection({{ $section->id }})" class="p-2 bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg transition-colors shadow-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
@@ -199,9 +217,10 @@
                         </div>
                     </div>
                 @empty
-                    <div class="bg-black/20 rounded-[2rem] border border-white/5 p-12 flex flex-col items-center justify-center text-center shadow-inner">
-                        <div class="w-20 h-20 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mb-6 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)]">
-                            <svg class="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <div class="bg-black/20 rounded-[2rem] hud-border p-12 flex flex-col items-center justify-center text-center shadow-inner">
+                        <div class="w-20 h-20 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mb-6 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] relative">
+                            <div class="absolute inset-0 bg-brand-500/20 rounded-full blur-md"></div>
+                            <svg class="w-10 h-10 text-slate-500 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
                         <h3 class="text-xl font-black text-white tracking-wide mb-2">No Sections Added</h3>
                         <p class="text-sm font-bold text-slate-400 max-w-sm">Your resume is currently empty. Start building it by adding sections from the left panel.</p>

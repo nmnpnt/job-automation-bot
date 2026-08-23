@@ -1,4 +1,21 @@
 <div class="space-y-8 animate-fade-in-up">
+<style>
+    .hud-border {
+        position: relative;
+    }
+    .hud-border::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(139,92,246,0.5), rgba(34,211,238,0.5), rgba(244,114,182,0.5));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+</style>
     <!-- Page Header and Actions -->
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
@@ -21,7 +38,8 @@
     </div>
 
     <!-- Advanced Filter Bar -->
-    <div class="bg-slate-900/60 backdrop-blur-2xl p-2 rounded-2xl border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.3)] flex flex-col xl:flex-row xl:items-center gap-3">
+    <div class="relative bg-slate-900/60 backdrop-blur-2xl p-2 rounded-2xl hud-border shadow-[0_10px_30px_rgba(0,0,0,0.3)] flex flex-col xl:flex-row xl:items-center gap-3 overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-neon-cyan/5 rounded-full blur-[60px] pointer-events-none mix-blend-screen"></div>
         <!-- Search -->
         <div class="relative flex-grow min-w-0">
             <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -128,59 +146,42 @@
     @endif
 
     <!-- Table Section -->
-    <div class="bg-slate-900/60 backdrop-blur-2xl rounded-[2rem] border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.3)] overflow-hidden relative transition-colors duration-500">
+    <div class="bg-slate-900/60 backdrop-blur-2xl rounded-[2rem] hud-border shadow-[0_10px_40px_rgba(0,0,0,0.3)] overflow-hidden relative transition-colors duration-500 group">
+        <div class="absolute -inset-1 bg-gradient-to-r from-neon-cyan/10 via-brand-500/10 to-neon-pink/10 blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 pointer-events-none"></div>
         
         <div wire:loading.flex wire:target="filterSource, filterStatus, search, sortField, sortDirection, gotoPage, previousPage, nextPage" class="absolute inset-0 bg-slate-900/40 z-20 flex items-center justify-center backdrop-blur-[2px]">
             <div class="w-12 h-12 rounded-full border-4 border-brand-500 border-t-transparent animate-spin shadow-[0_0_15px_rgba(139,92,246,0.5)]"></div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-white/5">
-                <thead class="bg-white/5 backdrop-blur-md">
-                    <tr>
-                        <th scope="col" class="px-6 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">Job Details</th>
-                        <th scope="col" class="px-6 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                        <th scope="col" class="px-6 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell">Source</th>
-                        <th scope="col" class="px-6 py-5 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest hidden lg:table-cell">Discovered</th>
-                        <th scope="col" class="px-6 py-5 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-white/5 bg-transparent">
-                    @forelse ($jobs as $job)
-                        <tr class="{{ $job->is_read ? 'bg-transparent hover:bg-white/5' : 'bg-brand-500/10 hover:bg-brand-500/20' }} transition-colors group relative border-b border-white/5">
-                            <!-- Unread Indicator Line -->
-                            @if(!$job->is_read)
-                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 rounded-r-full shadow-[0_0_10px_rgba(139,92,246,0.8)]"></div>
-                            @endif
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+            @forelse ($jobs as $job)
+                <div class="relative bg-white/5 backdrop-blur-md rounded-[1.5rem] p-5 hud-border shadow-[0_8px_30px_rgba(0,0,0,0.2)] hover:bg-white/10 hover:shadow-[0_8px_40px_rgba(34,211,238,0.15)] transition-all duration-300 group flex flex-col justify-between min-h-[200px]">
+                    <!-- Unread Indicator Line -->
+                    @if(!$job->is_read)
+                        <div class="absolute left-0 top-6 bottom-6 w-1 bg-brand-500 rounded-r-full shadow-[0_0_10px_rgba(139,92,246,0.8)]"></div>
+                    @endif
+                    
+                    <div class="flex-grow flex flex-col pl-2">
+                        <!-- Header (Title & Status) -->
+                        <div class="flex items-start justify-between gap-4 mb-3">
+                            <a href="{{ route('jobs.show', $job->id) }}" wire:navigate class="flex-1 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] transition-all">
+                                <h3 class="text-xl font-black {{ $job->is_read ? 'text-slate-200' : 'text-white' }} leading-tight mb-2">
+                                    {{ Str::limit($job->job_title, 55) }}
+                                </h3>
+                                <div class="text-sm font-bold text-slate-400 flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-md bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center shadow-sm shrink-0">
+                                        <span class="text-[10px] font-black text-white">{{ substr($job->company_name, 0, 1) }}</span>
+                                    </span>
+                                    {{ Str::limit($job->company_name, 35) }}
+                                    @if($job->location)
+                                        <span class="text-slate-600">&bull;</span>
+                                        <span class="truncate text-slate-500 max-w-[120px]" title="{{ $job->location }}">{{ $job->location }}</span>
+                                    @endif
+                                </div>
+                            </a>
 
-                            <td class="px-6 py-5 whitespace-nowrap">
-                                <a href="{{ route('jobs.show', $job->id) }}" wire:navigate class="block">
-                                    <div class="flex items-center gap-4">
-                                        <!-- Company Logo / Avatar -->
-                                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center shadow-sm shrink-0 group-hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-all">
-                                            <span class="text-sm font-black text-white">{{ substr($job->company_name, 0, 1) }}</span>
-                                        </div>
-                                        <div>
-                                            <div class="flex items-center gap-2">
-                                                <div class="text-[15px] font-black {{ $job->is_read ? 'text-slate-200' : 'text-white drop-shadow-md' }} group-hover:text-brand-300 transition-colors">{{ Str::limit($job->job_title, 45) }}</div>
-                                                @if(!$job->is_read)
-                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-black bg-brand-500/30 text-brand-200 uppercase tracking-widest border border-brand-500/50 shadow-[0_0_8px_rgba(139,92,246,0.4)] animate-pulse">New</span>
-                                                @endif
-                                            </div>
-                                            <div class="text-sm font-bold text-slate-400 flex items-center gap-1.5 mt-1">
-                                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                                                {{ Str::limit($job->company_name, 35) }}
-                                                
-                                                @if($job->location)
-                                                <span class="text-slate-600 mx-1">&bull;</span>
-                                                <span class="truncate max-w-[120px]">{{ $job->location }}</span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap">
+                            <!-- Status Badges -->
+                            <div class="shrink-0 flex flex-col items-end gap-2">
                                 @php
                                     $statusConfig = match($job->status->value) {
                                         'DISCOVERED' => ['bg' => 'bg-white/10', 'text' => 'text-slate-300', 'border' => 'border-white/20', 'icon' => 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 'shadow' => 'shadow-[0_0_10px_rgba(255,255,255,0.1)]'],
@@ -191,81 +192,88 @@
                                         default => ['bg' => 'bg-white/10', 'text' => 'text-slate-300', 'border' => 'border-white/20', 'icon' => 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'shadow' => 'shadow-[0_0_10px_rgba(255,255,255,0.1)]']
                                     };
                                 @endphp
-                                <div class="flex flex-col items-start gap-2">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black tracking-widest border {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} {{ $statusConfig['border'] }} {{ $statusConfig['shadow'] }} uppercase">
-                                        <svg class="w-3.5 h-3.5 mr-1.5 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $statusConfig['icon'] }}"></path></svg>
-                                        {{ str_replace('_', ' ', $job->status->name) }}
-                                    </span>
-                                    
-                                    @if(in_array($job->status->value, ['DISCOVERED', 'PENDING_REVIEW', 'READY_TO_APPLY']))
-                                    <div class="flex items-center text-[9px] text-brand-300 font-black tracking-widest bg-brand-500/20 px-2.5 py-1 rounded-md border border-brand-500/30 uppercase shadow-[0_0_8px_rgba(139,92,246,0.2)]" title="This job is ready to be processed by the Auto-Apply Bot">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                        Bot Ready
-                                    </div>
-                                    @elseif(in_array($job->status->value, ['FAILED']))
-                                    <div class="flex items-center text-[9px] text-rose-300 font-black tracking-widest bg-rose-500/20 px-2.5 py-1 rounded-md border border-rose-500/30 uppercase shadow-[0_0_8px_rgba(244,63,94,0.2)]" title="{{ $job->failure_reason ?? 'The bot attempted to apply but failed.' }}">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        Bot Failed
-                                    </div>
-                                    @elseif(in_array($job->status->value, ['EXTERNAL_APPLICATION', 'COMPANY_WEBSITE', 'MANUAL_REQUIRED']))
-                                    <div class="flex items-center text-[9px] text-amber-300 font-black tracking-widest bg-amber-500/20 px-2.5 py-1 rounded-md border border-amber-500/30 uppercase shadow-[0_0_8px_rgba(245,158,11,0.2)]" title="This job redirects externally and requires manual application.">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                                        Manual Apply
-                                    </div>
-                                    @endif
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black tracking-widest border {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} {{ $statusConfig['border'] }} {{ $statusConfig['shadow'] }} uppercase">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $statusConfig['icon'] }}"></path></svg>
+                                    {{ str_replace('_', ' ', $job->status->name) }}
+                                </span>
+                                
+                                @if(in_array($job->status->value, ['DISCOVERED', 'PENDING_REVIEW', 'READY_TO_APPLY']))
+                                <div class="inline-flex items-center text-[9px] text-brand-300 font-black tracking-widest bg-brand-500/20 px-2 py-1 rounded-md border border-brand-500/30 uppercase shadow-[0_0_8px_rgba(139,92,246,0.2)]" title="This job is ready to be processed by the Auto-Apply Bot">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    Bot Ready
                                 </div>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap hidden md:table-cell">
-                                <div class="flex items-center text-sm font-bold text-slate-300">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-slate-500 mr-2 shadow-[0_0_5px_rgba(100,116,139,0.5)]"></span>
-                                    {{ str_replace('_', ' ', $job->application_source->name) }}
+                                @elseif(in_array($job->status->value, ['FAILED']))
+                                <div class="inline-flex items-center text-[9px] text-rose-300 font-black tracking-widest bg-rose-500/20 px-2 py-1 rounded-md border border-rose-500/30 uppercase shadow-[0_0_8px_rgba(244,63,94,0.2)]" title="{{ $job->failure_reason ?? 'The bot attempted to apply but failed.' }}">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Bot Failed
                                 </div>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap hidden lg:table-cell">
-                                <div class="text-sm font-bold text-slate-300 flex flex-col">
-                                    <span>{{ $job->created_at->format('M j, Y') }}</span>
-                                    <span class="text-[11px] text-slate-500 font-black uppercase tracking-widest mt-0.5">{{ $job->created_at->diffForHumans() }}</span>
+                                @elseif(in_array($job->status->value, ['EXTERNAL_APPLICATION', 'COMPANY_WEBSITE', 'MANUAL_REQUIRED']))
+                                <div class="inline-flex items-center text-[9px] text-amber-300 font-black tracking-widest bg-amber-500/20 px-2 py-1 rounded-md border border-amber-500/30 uppercase shadow-[0_0_8px_rgba(245,158,11,0.2)]" title="This job redirects externally and requires manual application.">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    Manual Apply
                                 </div>
-                            </td>
-                            <td class="px-6 py-5 whitespace-nowrap text-right">
-                                <div class="flex items-center justify-end gap-3">
-                                    <button wire:click="toggleSaveJob({{ $job->id }})" class="p-2.5 rounded-xl border {{ $job->is_saved ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'bg-white/5 border-white/10 text-slate-400 hover:text-amber-400 hover:border-amber-500/50 hover:bg-amber-500/10 hover:shadow-[0_0_10px_rgba(245,158,11,0.2)]' }} transition-all focus:outline-none" title="{{ $job->is_saved ? 'Remove from Saved' : 'Save Job' }}">
-                                        <svg class="w-4 h-4 {{ $job->is_saved ? 'fill-current' : 'fill-none' }}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
-                                    </button>
-                                    
-                                    <a href="{{ route('jobs.show', $job->id) }}" wire:navigate class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white hover:bg-white/20 hover:border-neon-cyan/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] font-black uppercase tracking-wider text-[10px] transition-all">
-                                        View
-                                        <svg class="w-3.5 h-3.5 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-24 whitespace-nowrap text-center">
-                                <div class="flex flex-col items-center justify-center max-w-sm mx-auto">
-                                    <div class="w-24 h-24 bg-white/5 rounded-3xl flex items-center justify-center mb-6 border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)]">
-                                        <span class="text-4xl animate-float">✨</span>
-                                    </div>
-                                    <h3 class="text-xl font-black text-white tracking-wide">No signals detected</h3>
-                                    <p class="mt-2 text-sm text-slate-400 font-bold leading-relaxed">
-                                        @if($search || $filterSource || $filterStatus)
-                                            No job matches your current filter matrix. Adjust parameters and try again.
-                                        @else
-                                            Your job pipeline is empty. Jobs will appear here once the scraper finishes running.
-                                        @endif
-                                    </p>
-                                    @if($search || $filterSource || $filterStatus)
-                                        <button wire:click="$set('search', ''); $set('filterSource', ''); $set('filterStatus', '')" class="mt-6 px-6 py-3 bg-neon-cyan/20 text-neon-cyan hover:bg-neon-cyan/30 font-black tracking-widest uppercase text-[10px] rounded-xl transition-all shadow-[0_0_15px_rgba(34,211,238,0.2)] border border-neon-cyan/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]">
-                                            Reset Filters
-                                        </button>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Source & Date Info -->
+                        <div class="flex items-center gap-4 text-xs font-bold text-slate-500 mb-5">
+                            <div class="flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                <span>{{ str_replace('_', ' ', $job->application_source->name) }}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>{{ $job->created_at->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer / Actions -->
+                    <div class="flex items-center justify-between border-t border-white/5 pt-4 mt-auto pl-2">
+                        <div class="flex items-center gap-2">
+                            @if(!$job->is_read)
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black bg-brand-500/30 text-brand-200 uppercase tracking-widest border border-brand-500/50 shadow-[0_0_8px_rgba(139,92,246,0.4)] animate-pulse">New</span>
+                            @endif
+                            @if($job->match_score)
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border {{ $job->match_score >= 80 ? 'bg-neon-cyan/20 text-neon-cyan border-neon-cyan/30 shadow-[0_0_8px_rgba(34,211,238,0.3)]' : ($job->match_score >= 50 ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 shadow-[0_0_8px_rgba(245,158,11,0.3)]' : 'bg-neon-pink/20 text-neon-pink border-neon-pink/30 shadow-[0_0_8px_rgba(244,114,182,0.3)]') }}" title="{{ $job->match_reason }}">
+                                    AI Match: {{ $job->match_score }}%
+                                </span>
+                            @endif
+                        </div>
+                        
+                        <div class="flex items-center gap-2">
+                            <button wire:click="toggleSaveJob({{ $job->id }})" class="p-2 rounded-xl border {{ $job->is_saved ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'bg-white/5 border-white/10 text-slate-400 hover:text-amber-400 hover:border-amber-500/50 hover:bg-amber-500/10 hover:shadow-[0_0_10px_rgba(245,158,11,0.2)]' }} transition-all focus:outline-none" title="{{ $job->is_saved ? 'Remove from Saved' : 'Save Job' }}">
+                                <svg class="w-4 h-4 {{ $job->is_saved ? 'fill-current' : 'fill-none' }}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                            </button>
+                            
+                            <a href="{{ route('jobs.show', $job->id) }}" wire:navigate class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan hover:bg-neon-cyan/20 hover:border-neon-cyan/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] font-black uppercase tracking-wider text-[10px] transition-all">
+                                View Details
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="col-span-1 lg:col-span-2 flex flex-col items-center justify-center p-24 bg-white/5 backdrop-blur-md rounded-[2rem] hud-border border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)] text-center">
+                    <div class="w-24 h-24 bg-white/5 rounded-3xl flex items-center justify-center mb-6 border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+                        <span class="text-4xl animate-float">✨</span>
+                    </div>
+                    <h3 class="text-xl font-black text-white tracking-wide">No signals detected</h3>
+                    <p class="mt-2 text-sm text-slate-400 font-bold leading-relaxed max-w-sm">
+                        @if($search || $filterSource || $filterStatus)
+                            No job matches your current filter matrix. Adjust parameters and try again.
+                        @else
+                            Your job pipeline is empty. Jobs will appear here once the scraper finishes running.
+                        @endif
+                    </p>
+                    @if($search || $filterSource || $filterStatus)
+                        <button wire:click="$set('search', ''); $set('filterSource', ''); $set('filterStatus', '')" class="mt-6 px-6 py-3 bg-neon-cyan/20 text-neon-cyan hover:bg-neon-cyan/30 font-black tracking-widest uppercase text-[10px] rounded-xl transition-all shadow-[0_0_15px_rgba(34,211,238,0.2)] border border-neon-cyan/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+                            Reset Filters
+                        </button>
+                    @endif
+                </div>
+            @endforelse
         </div>
         
         @if($jobs->hasPages())

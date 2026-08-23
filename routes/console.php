@@ -9,5 +9,5 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('jobs:scrape')->hourly();
+Schedule::command('app:process-schedules')->everyMinute()->withoutOverlapping();
 Schedule::command('app:check-emails')->hourly();

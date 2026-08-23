@@ -19,6 +19,7 @@ class LiveActivityFeed extends Component
         $this->activities = Application::with(['events' => function ($query) {
             $query->latest()->limit(1);
         }])
+        ->where('user_id', auth()->id())
         ->latest('updated_at')
         ->limit(10)
         ->get()
@@ -33,7 +34,7 @@ class LiveActivityFeed extends Component
         if ($this->profile && $this->profile->scraping_status !== 'running') {
             $this->profile->update(['scraping_status' => 'running', 'scraper_pid' => null]);
             try {
-                \App\Jobs\RunScraperJob::dispatch($this->profile->id);
+                \App\Jobs\RunUserScraperJob::dispatch($this->profile->user_id, null, 'manual');
             } catch (\Exception $e) {
                 $this->profile->update(['scraping_status' => 'idle']);
                 throw $e;
@@ -61,6 +62,11 @@ class LiveActivityFeed extends Component
     #[On('echo:activity-feed,.ActivityLogged')]
     public function handleNewActivity($event)
     {
+        $appUserId = is_object($event['application']) ? $event['application']->user_id : ($event['application']['user_id'] ?? null);
+        if ($appUserId != auth()->id()) {
+            return;
+        }
+
         // Add new activity to the top and keep only the latest 10
         array_unshift($this->activities, $this->formatActivity(
             (object) $event['application'],
