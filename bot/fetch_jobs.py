@@ -3,8 +3,15 @@ import json
 import asyncio
 import os
 import time
+import re
 from urllib.parse import urlparse
 from playwright.async_api import async_playwright
+
+try:
+    from curl_cffi import requests as cffi_requests
+    _CURL_CFFI_AVAILABLE = True
+except ImportError:
+    _CURL_CFFI_AVAILABLE = False
 
 async def run_scraper(input_data):
     platform = input_data.get('platform')
@@ -97,167 +104,297 @@ async def run_scraper(input_data):
                                     all_jobs.append({'title': title, 'company': company, 'location': location, 'url': job_url, 'description': desc, 'query_keyword': keyword})
                 except Exception as e:
                     print(f"[DEBUG] Failed HTTP fetch for {platform}: {e}", file=sys.stderr)
-    else:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=False,
-                args=[
-                    '--headless=new',
-                    '--disable-blink-features=AutomationControlled',
-                    '--no-sandbox',
-                    '--disable-dev-shm-usage',
-                ]
-            )
-        
-            context = await browser.new_context(
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            )
-        
-            cookie_file = os.path.join(session_dir, 'cookies.json') if session_dir else None
+    elif platform == 'NAUKRI':
+        # Naukri uses Akamai deep TLS fingerprinting — curl_cffi impersonates a real
+        # Chrome TLS stack to bypass it. Even with valid auth cookies, the job search
+        # API (/jobapi/v3/search) returns HTTP 406 "recaptcha required". The SSR HTML
+        # shell also returns loading:true / jobDetails:[] in the RSC preloadState.
+        # We still attempt RSC parsing in case a future version includes pre-rendered jobs.
+        if not _CURL_CFFI_AVAILABLE:
+            print("[DEBUG] Naukri requires curl_cffi. Install: pip install curl_cffi", file=sys.stderr)
+        else:
+            from bs4 import BeautifulSoup as _BS
+            raw_cookies = {}
+            cookie_file = os.path.normpath(os.path.join(session_dir, 'cookies.json')) if session_dir else None
             if cookie_file and os.path.exists(cookie_file):
                 try:
-                    with open(cookie_file, 'r') as f:
-                        cookies = json.load(f)
-                    
-                    clean_cookies = []
-                    for c in cookies:
-                        valid_c = {'name': c['name'], 'value': c['value'], 'domain': c['domain'], 'path': c['path']}
-                        if 'expirationDate' in c:
-                            valid_c['expires'] = c['expirationDate']
-                        if 'secure' in c:
-                            valid_c['secure'] = c['secure']
-                        if 'httpOnly' in c:
-                            valid_c['httpOnly'] = c['httpOnly']
-                        clean_cookies.append(valid_c)
-                
-                    await context.add_cookies(clean_cookies)
+                    with open(cookie_file, 'r', encoding='utf-8-sig') as f:
+                        raw_list = json.load(f)
+                    raw_cookies = {c['name']: c['value'] for c in raw_list}
                 except Exception as e:
-                    print(f"[DEBUG] Failed to load cookies: {e}", file=sys.stderr)
+                    print(f"[DEBUG] Naukri cookie load error: {e}", file=sys.stderr)
+
+            naukri_headers = {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-IN,en;q=0.9',
+                'Referer': 'https://www.naukri.com/',
+            }
 
             for query in search_queries:
-                page = await context.new_page()
-            
-                try:
-                    from playwright_stealth import stealth_async
-                    await stealth_async(page)
-                except ImportError:
-                    pass
-
                 keyword = query['role']
                 loc = query['location']
-            
-                search_url = ''
-                job_selector = ''
-
-                if platform == 'INDEED':
-                    search_url = f"https://www.indeed.com/jobs?q={keyword}&l={loc}"
-                    job_selector = '.job_seen_beacon'
-                elif platform == 'LINKEDIN':
-                    time_filter = ''
-                    if str(max_job_age_days) == '1':
-                        time_filter = '&f_TPR=r86400'
-                    elif str(max_job_age_days) == '7':
-                        time_filter = '&f_TPR=r604800'
-                    elif str(max_job_age_days) == '30':
-                        time_filter = '&f_TPR=r2592000'
-                
-                    remote_param = '&f_WT=2' if remote_preference == 'only' or loc == 'Remote' else ''
-                    search_url = f"https://www.linkedin.com/jobs/search/?keywords={keyword}&location={loc}{remote_param}{time_filter}"
-                    job_selector = 'li, .job-card-container, .job-search-card'
-                elif platform == 'NAUKRI':
-                    if loc:
-                        search_url = f"https://www.naukri.com/{keyword.replace(' ', '-')}-jobs-in-{loc.replace(' ', '-')}"
-                    else:
-                        search_url = f"https://www.naukri.com/{keyword.replace(' ', '-')}-jobs"
-                
-                    if str(max_job_age_days) in ['1', '7', '14', '30']:
-                        search_url += f"?jobAge={max_job_age_days}"
-                    
-                    job_selector = '.srp-jobtuple-wrapper'
-                elif platform == 'UPLERS':
-                    search_url = f"https://platform.uplers.com/talent/jobs?search={keyword}"
-                    job_selector = '.job-card'
+                kw_slug = keyword.lower().replace(' ', '-')
+                if loc and loc.lower() not in ['remote', 'india', '']:
+                    naukri_url = f"https://www.naukri.com/{kw_slug}-jobs-in-{loc.lower().replace(' ', '-')}"
                 else:
-                    raise Exception('Unknown platform')
+                    naukri_url = f"https://www.naukri.com/{kw_slug}-jobs"
+                if str(max_job_age_days) in ['1', '7', '14', '30']:
+                    naukri_url += f"?jobAge={max_job_age_days}"
 
+                print(f"[DEBUG] Naukri (curl_cffi): {naukri_url}", file=sys.stderr)
                 try:
-                    print(f"[DEBUG] Loading {search_url}", file=sys.stderr)
-                    await page.goto(search_url, wait_until='domcontentloaded', timeout=60000)
-                    await page.wait_for_timeout(3000)
+                    resp = cffi_requests.get(
+                        naukri_url,
+                        headers=naukri_headers,
+                        cookies=raw_cookies,
+                        impersonate='chrome120',
+                        timeout=20,
+                    )
+                    if resp.status_code == 200:
+                        # Parse Next.js RSC streaming chunks for job data
+                        rsc_chunks = re.findall(
+                            r'self\.__next_f\.push\(\[1,"(.*?)"\]\)',
+                            resp.text, re.DOTALL
+                        )
+                        jobs_found = 0
+                        for chunk in rsc_chunks:
+                            try:
+                                decoded = chunk.replace('\\"', '"').replace('\\\\', '\\').replace('\\/', '/')
+                            except Exception:
+                                continue
+                            m = re.search(
+                                r'"jobDetails"\s*:\s*(\[.+?\])\s*,\s*"(?:fatFooter|filters|failover)"',
+                                decoded, re.DOTALL
+                            )
+                            if m:
+                                try:
+                                    jobs_list = json.loads(m.group(1))
+                                    for j in jobs_list:
+                                        title = j.get('title', j.get('jobTitle', ''))
+                                        company = j.get('companyName', '')
+                                        placeholders = j.get('placeholders', [])
+                                        loc_label = placeholders[1].get('label', '') if len(placeholders) > 1 else ''
+                                        job_url = j.get('jdURL', j.get('jobURL', ''))
+                                        if job_url and not job_url.startswith('http'):
+                                            job_url = 'https://www.naukri.com' + job_url
+                                        if title and job_url:
+                                            all_jobs.append({
+                                                'title': title, 'company': company,
+                                                'location': loc_label, 'url': job_url,
+                                                'description': '', 'query_keyword': keyword,
+                                            })
+                                            jobs_found += 1
+                                except Exception as je:
+                                    print(f"[DEBUG] Naukri RSC parse error: {je}", file=sys.stderr)
+                        if jobs_found == 0:
+                            print(
+                                "[DEBUG] Naukri: 0 jobs from SSR (preloadState has loading:true). "
+                                "API /jobapi/v3/search requires reCAPTCHA (HTTP 406) even with "
+                                "valid auth cookies — not automatable without a CAPTCHA solver.",
+                                file=sys.stderr,
+                            )
+                    else:
+                        print(f"[DEBUG] Naukri HTTP {resp.status_code} for {naukri_url}", file=sys.stderr)
+                except Exception as e:
+                    print(f"[DEBUG] Naukri curl_cffi error: {e}", file=sys.stderr)
+    else:
+        # Use manual start/stop (NOT async with) so browser/context stays alive
+        # through BOTH the scraping phase AND the description-fetching phase below.
+        p = await async_playwright().start()
+        browser = await p.chromium.launch(
+            headless=True,
+            args=[
+                '--headless=new',
+                '--disable-blink-features=AutomationControlled',
+                '--no-sandbox',
+                '--disable-dev-shm-usage',
+            ]
+        )
 
-                    for _ in range(3):
-                        await page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
-                        await page.wait_for_timeout(2000)
+        context = await browser.new_context(
+            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        )
 
-                    jobs = await page.evaluate('''([sel, plat]) => {
-                        const jobNodes = document.querySelectorAll(sel);
-                        const extracted = [];
-                    
-                        jobNodes.forEach(node => {
-                            let url = '', title = 'Unknown', company = 'Unknown', location = 'Unknown';
-                        
-                            if (plat === 'LINKEDIN') {
-                                const link = node.querySelector('a[href*="/jobs/view/"], .job-card-list__title, .base-card__full-link');
-                                if (link) {
-                                    url = link.href;
-                                    title = link.innerText.trim() || 'Software Engineer';
-                                }
-                                const comp = node.querySelector('.job-card-container__primary-description, .hidden-nested-link, .base-search-card__subtitle, .artdeco-entity-lockup__subtitle');
-                                if (comp) company = comp.innerText.trim();
-                                const loc = node.querySelector('.job-card-container__metadata-item, .job-search-card__location, .artdeco-entity-lockup__caption');
-                                if (loc) location = loc.innerText.trim();
-                            } else if (plat === 'INDEED') {
-                                const link = node.querySelector('h2.jobTitle a');
-                                if (link) {
-                                    url = link.href;
-                                    title = link.querySelector('span') ? link.querySelector('span').innerText : link.innerText;
-                                }
-                                const comp = node.querySelector('[data-testid="company-name"]');
-                                if (comp) company = comp.innerText.trim();
-                                const locationNode = node.querySelector('[data-testid="text-location"]');
-                                if (locationNode) location = locationNode.innerText.trim();
-                            } else if (plat === 'NAUKRI') {
-                                const link = node.querySelector('a.title');
-                                if (link) {
-                                    url = link.href;
-                                    title = link.innerText.trim();
-                                }
-                                const comp = node.querySelector('a.comp-name');
-                                if (comp) company = comp.innerText.trim();
-                                const loc = node.querySelector('.locWdth, .loc-wrap');
-                                if (loc) location = loc.innerText.trim();
-                            } else {
-                                const link = node.querySelector('a');
-                                url = link ? link.href : window.location.href;
-                                title = node.innerText.split('\\n')[0];
+        cookie_file = os.path.normpath(os.path.join(session_dir, 'cookies.json')) if session_dir else None
+        if cookie_file and os.path.exists(cookie_file):
+            try:
+                with open(cookie_file, 'r', encoding='utf-8-sig') as f:
+                    cookies = json.load(f)
+
+                clean_cookies = []
+                for c in cookies:
+                    valid_c = {'name': c['name'], 'value': c['value'], 'domain': c['domain'], 'path': c['path']}
+                    if 'expirationDate' in c:
+                        valid_c['expires'] = c['expirationDate']
+                    if 'secure' in c:
+                        valid_c['secure'] = c['secure']
+                    if 'httpOnly' in c:
+                        valid_c['httpOnly'] = c['httpOnly']
+                    clean_cookies.append(valid_c)
+
+                await context.add_cookies(clean_cookies)
+            except Exception as e:
+                print(f"[DEBUG] Failed to load cookies: {e}", file=sys.stderr)
+
+        for query in search_queries:
+            page = await context.new_page()
+
+            try:
+                from playwright_stealth import stealth_async
+                await stealth_async(page)
+            except ImportError:
+                pass
+
+            keyword = query['role']
+            loc = query['location']
+
+            search_url = ''
+            job_selector = ''
+
+            if platform == 'INDEED':
+                # Use Indian subdomain so geo-targeting returns Indian jobs (www.indeed.com returns US results)
+                search_url = f"https://in.indeed.com/jobs?q={keyword}&l={loc}"
+                job_selector = '.job_seen_beacon'
+            elif platform == 'LINKEDIN':
+                time_filter = ''
+                if str(max_job_age_days) == '1':
+                    time_filter = '&f_TPR=r86400'
+                elif str(max_job_age_days) == '7':
+                    time_filter = '&f_TPR=r604800'
+                elif str(max_job_age_days) == '30':
+                    time_filter = '&f_TPR=r2592000'
+
+                remote_param = '&f_WT=2' if remote_preference == 'only' or loc == 'Remote' else ''
+                search_url = f"https://www.linkedin.com/jobs/search/?keywords={keyword}&location={loc}{remote_param}{time_filter}"
+                job_selector = '.job-search-card, .base-card'
+            elif platform == 'UPLERS':
+                # Uplers talent portal requires authentication.
+                # If cookies are provided for platform.uplers.com, use them.
+                search_url = 'https://platform.uplers.com/talent/jobs'
+                job_selector = '[class*="job-card"], [class*="jobCard"], [class*="JobCard"], [class*="opportunity"], [class*="Opportunity"]'
+            else:
+                raise Exception('Unknown platform')
+
+            try:
+                print(f"[DEBUG] Loading {search_url}", file=sys.stderr)
+                await page.goto(search_url, wait_until='domcontentloaded', timeout=60000)
+                # Uplers is a heavy SPA that needs extra time to render job cards
+                await page.wait_for_timeout(6000 if platform == 'UPLERS' else 3000)
+
+                for _ in range(3):
+                    await page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+                    await page.wait_for_timeout(2000)
+
+                jobs = await page.evaluate('''([sel, plat]) => {
+                    const jobNodes = document.querySelectorAll(sel);
+                    const extracted = [];
+
+                    jobNodes.forEach(node => {
+                        let url = '', title = 'Unknown', company = 'Unknown', location = 'Unknown';
+
+                        if (plat === 'LINKEDIN') {
+                            const link = node.querySelector('a[href*="/jobs/view/"], .job-card-list__title, .base-card__full-link');
+                            if (link) {
+                                url = link.href;
+                                title = link.innerText.trim() || 'Software Engineer';
                             }
-                        
-                            if (url) {
+                            const comp = node.querySelector('.job-card-container__primary-description, .hidden-nested-link, .base-search-card__subtitle, .artdeco-entity-lockup__subtitle');
+                            if (comp) company = comp.innerText.trim();
+                            const loc = node.querySelector('.job-card-container__metadata-item, .job-search-card__location, .artdeco-entity-lockup__caption');
+                            if (loc) location = loc.innerText.trim();
+                        } else if (plat === 'INDEED') {
+                            // Try multiple Indeed selectors — DOM varies by region/experiment
+                            const link = node.querySelector('h2.jobTitle a, h2 a[data-jk], a[id^="job_"], a.jcs-JobTitle');
+                            if (link) {
+                                // Resolve href relative to current page in case it's a relative URL
+                                try { url = new URL(link.getAttribute('href') || '', window.location.href).href; } catch(e) { url = link.href || ''; }
+                                const span = link.querySelector('span[title], span:not([class*="visually"])');
+                                title = (span ? span.innerText : link.innerText).trim() || 'Unknown';
+                            }
+                            // Fallback: use data-jk to build canonical URL
+                            if (!url) {
+                                const jk = node.getAttribute('data-jk') || node.querySelector('[data-jk]')?.getAttribute('data-jk');
+                                if (jk) url = `https://www.indeed.com/viewjob?jk=${jk}`;
+                            }
+                            const comp = node.querySelector('[data-testid="company-name"], .companyName');
+                            if (comp) company = comp.innerText.trim();
+                            const locationNode = node.querySelector('[data-testid="text-location"], .companyLocation');
+                            if (locationNode) location = locationNode.innerText.trim();
+                        } else if (plat === 'NAUKRI') {
+                            const link = node.querySelector('a.title');
+                            if (link) {
+                                url = link.href;
+                                title = link.innerText.trim();
+                            }
+                            const comp = node.querySelector('a.comp-name');
+                            if (comp) company = comp.innerText.trim();
+                            const loc = node.querySelector('.locWdth, .loc-wrap');
+                            if (loc) location = loc.innerText.trim();
+                        } else if (plat === 'UPLERS') {
+                            // platform.uplers.com/talent/jobs — React SPA, try broad selectors
+                            const titleEl = node.querySelector(
+                                'h2, h3, h4, [class*="title" i], [class*="name" i], [data-testid*="title"]'
+                            );
+                            if (titleEl) title = titleEl.innerText.trim();
+
+                            // Job URL: look for links, or build from job ID attribute
+                            const linkEl = node.querySelector('a[href*="/job"], a[href*="opportunity"], a');
+                            if (linkEl) {
+                                url = linkEl.href;
+                            } else {
+                                // Fallback: try data-id or data-job-id on the card itself
+                                const jid = node.getAttribute('data-id') ||
+                                            node.getAttribute('data-job-id') ||
+                                            node.querySelector('[data-id], [data-job-id]')?.getAttribute('data-id');
+                                if (jid) url = 'https://platform.uplers.com/talent/jobs/' + jid;
+                            }
+
+                            const compEl = node.querySelector(
+                                '[class*="company" i], [class*="client" i], [class*="employer" i]'
+                            );
+                            if (compEl) company = compEl.innerText.trim();
+
+                            const locEl = node.querySelector(
+                                '[class*="location" i], [class*="place" i], [class*="region" i]'
+                            );
+                            if (locEl) location = locEl.innerText.trim();
+                        } else {
+                            const link = node.querySelector('a');
+                            url = link ? link.href : window.location.href;
+                            title = node.innerText.split('\\n')[0];
+                        }
+
+                        if (url) {
+                            // Keep full URL for Indeed (query params needed); strip for others
+                            if (plat !== 'INDEED') {
                                 try {
                                     const parsedUrl = new URL(url);
                                     url = parsedUrl.origin + parsedUrl.pathname;
                                 } catch (e) {}
-                                extracted.push({ url, title, company, location });
                             }
-                        });
-                        return { extracted, nodeCount: jobNodes.length, pageTitle: document.title };
-                    }''', [job_selector, platform])
-                
-                    print(f"[DEBUG] Page title: {jobs['pageTitle']}, Nodes found: {jobs['nodeCount']}", file=sys.stderr)
-                
-                    for j in jobs['extracted']:
-                        j['query_keyword'] = keyword
-                    all_jobs.extend(jobs['extracted'])
-                
-                except Exception as e:
-                    print(f"[DEBUG] Error on {query['role']}: {str(e)}", file=sys.stderr)
-                    if session_dir:
-                        try:
-                            await page.screenshot(path=os.path.join(session_dir, f'failure_{platform}_{int(time.time())}.png'))
-                        except:
-                            pass
-                finally:
-                    await page.close()
+                            extracted.push({ url, title, company, location });
+                        }
+                    });
+                    return { extracted, nodeCount: jobNodes.length, pageTitle: document.title };
+                }''', [job_selector, platform])
+
+                print(f"[DEBUG] Page title: {jobs['pageTitle']}, Nodes found: {jobs['nodeCount']}", file=sys.stderr)
+
+                for j in jobs['extracted']:
+                    j['query_keyword'] = keyword
+                all_jobs.extend(jobs['extracted'])
+
+            except Exception as e:
+                print(f"[DEBUG] Error on {query['role']}: {str(e)}", file=sys.stderr)
+                if session_dir:
+                    try:
+                        await page.screenshot(path=os.path.join(session_dir, f'failure_{platform}_{int(time.time())}.png'))
+                    except:
+                        pass
+            finally:
+                await page.close()
+        # Playwright scraping loop ends here
+
 
     unique_jobs = list({job['url']: job for job in all_jobs}.values())
     print(f"[DEBUG] Found {len(unique_jobs)} unique jobs. Fetching descriptions...", file=sys.stderr)
@@ -325,9 +462,9 @@ async def run_scraper(input_data):
                     except Exception as e:
                         print(f"[DEBUG] Failed to fetch desc via HTTP for {job['url']}: {e}", file=sys.stderr)
                         
-                if platform in ['UNSTOP', 'CUTSHORT', 'HIRIST']:
+                if platform in ['UNSTOP', 'CUTSHORT', 'HIRIST', 'LINKEDIN']:
                     return
-            
+
                 # Fallback to Playwright for non-LinkedIn or if HTTP failed
                 detail_page = None
                 try:
@@ -400,11 +537,22 @@ async def run_scraper(input_data):
             await asyncio.gather(*(process_job(job) for job in batch))
             await asyncio.sleep(2)
     
-    if 'browser' in locals():
-        await browser.close()
+    # Clean up browser if Playwright was used
+    if 'browser' in locals() and browser:
+        try:
+            await browser.close()
+        except:
+            pass
+    if 'p' in locals() and hasattr(p, 'stop'):
+        try:
+            await p.stop()
+        except:
+            pass
     
     # Strict keyword filtering to fix fuzzy search issues
     final_jobs = []
+    # Indian curated platforms have their own relevance — skip keyword filtering
+    is_indian_platform = platform in ['UNSTOP', 'CUTSHORT', 'HIRIST']
     common_words = {'developer', 'engineer', 'senior', 'junior', 'lead', 'manager', 'architect', 'expert', 'specialist', 'executive'}
     
     for job in unique_jobs:
@@ -428,32 +576,55 @@ async def run_scraper(input_data):
             continue
         
         # Strict Remote Check
+        # Curated Indian platforms (Unstop/Cutshort/Hirist) may mix online/remote listings —
+        # do NOT filter them by remote_preference; their curation already makes them relevant.
         location_lower = job.get('location', '').lower()
-        is_remote_job = 'remote' in location_lower or 'remote' in title_lower
-        if remote_preference == 'only' and not is_remote_job:
-            continue
-        if remote_preference == 'none' and is_remote_job:
+        is_remote_job = 'remote' in location_lower or 'work from home' in location_lower or 'remote' in title_lower
+        if platform not in ['UNSTOP', 'CUTSHORT', 'HIRIST']:
+            if remote_preference == 'only' and not is_remote_job:
+                continue
+            if remote_preference == 'none' and is_remote_job:
+                continue
+
+        # Strict Location Check
+        is_indian_platform = platform in ['UNSTOP', 'CUTSHORT', 'HIRIST']
+        # Country-level location names — when the user specifies a whole country, the
+        # platform already filters results to that country via URL or API (e.g. in.indeed.com
+        # for India). Applying a per-job location-string match would incorrectly remove all
+        # city-named jobs ("Bangalore", "Hyderabad") that don't contain the country word.
+        COUNTRY_NAMES = {
+            'india', 'usa', 'us', 'uk', 'australia', 'canada', 'germany', 'singapore',
+            'united states', 'united kingdom', 'new zealand', 'france', 'netherlands',
+            'remote', 'worldwide',
+        }
+        all_locs_are_countries = bool(locations) and all(
+            loc.strip().lower() in COUNTRY_NAMES for loc in locations
+        )
+
+        if locations and remote_preference != 'only' and not is_indian_platform and not all_locs_are_countries:
+            # Remote jobs are worldwide — always accept them when remote is allowed
+            if is_remote_job and remote_preference == 'include':
+                pass  # worldwide remote: location check skipped
+            else:
+                location_matched = False
+                for loc in locations:
+                    if loc.lower() in location_lower:
+                        location_matched = True
+                        break
+                if not location_matched:
+                    continue
+
+        # Indian curated platforms have their own relevance curation — skip keyword filtering
+        if is_indian_platform:
+            final_jobs.append(job)
             continue
 
-        # Strict Location Check (if not remote-only)
-        if locations and remote_preference != 'only':
-            location_matched = False
-            for loc in locations:
-                if loc.lower() in location_lower:
-                    location_matched = True
-                    break
-        
-            if remote_preference == 'include' and is_remote_job:
-                location_matched = True
-            
-            if not location_matched and not is_remote_job:
-                continue
-            
+
         # Make keyword matching stricter to avoid fetching unrelated jobs
         title_match = keyword_lower in title_lower or any(core_kw in title_lower for core_kw in core_keywords)
         # Require keyword to be mentioned at least 3 times in description if not in title
         desc_keyword_count = sum(desc_lower.count(core_kw) for core_kw in core_keywords)
-    
+
         if title_match or desc_keyword_count >= 3:
             final_jobs.append(job)
     
