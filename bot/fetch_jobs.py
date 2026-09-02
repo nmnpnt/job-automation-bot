@@ -13,7 +13,7 @@ try:
 except ImportError:
     _CURL_CFFI_AVAILABLE = False
 
-MAX_JOBS_PER_QUERY = 100
+MAX_JOBS_PER_QUERY = 500
 
 async def scrape_naukri_with_browser(search_queries, session_dir, max_job_age_days):
     jobs = []
@@ -1331,6 +1331,8 @@ async def run_scraper(input_data):
             # Remote jobs are worldwide — always accept them when remote is allowed
             if is_remote_job and remote_preference == 'include':
                 pass  # worldwide remote: location check skipped
+            elif platform == 'LINKEDIN':
+                pass  # LinkedIn search query already filters by location, trust it
             else:
                 location_matched = False
                 for loc in locations:
