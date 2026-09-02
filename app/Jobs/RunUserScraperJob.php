@@ -3,12 +3,12 @@
 namespace App\Jobs;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Queue\Middleware\WithoutOverlapping;
 use App\Events\ActivityLogged;
 use Illuminate\Support\Str;
 
-class RunUserScraperJob implements ShouldQueue
+class RunUserScraperJob implements ShouldQueue, ShouldBeUnique
 {
     use Queueable;
 
@@ -16,6 +16,8 @@ class RunUserScraperJob implements ShouldQueue
     public $scheduleId;
     public $triggerType;
     public $timeout = 7200; // 2 hours
+    public $tries = 1;
+    public $uniqueFor = 7200;
 
     public function __construct($userId, $scheduleId = null, $triggerType = 'scheduled')
     {
@@ -25,9 +27,9 @@ class RunUserScraperJob implements ShouldQueue
         $this->onQueue('scraper');
     }
 
-    public function middleware()
+    public function uniqueId()
     {
-        return [(new WithoutOverlapping($this->userId))->dontRelease()];
+        return 'user-scraper:' . $this->userId;
     }
 
     public function handle()
@@ -140,10 +142,11 @@ class RunUserScraperJob implements ShouldQueue
                                     'job_title' => $jobData['title'],
                                     'company_name' => $jobData['company'],
                                     'status' => 'DISCOVERED',
-                                    'application_source' => $platform,
+                                    'application_source' => $jobData['source'] ?? $platform,
                                     'can_auto_apply' => true,
                                     'description' => $jobData['description'] ?? null,
                                     'skills_required' => $jobData['skills'] ?? null,
+                                    'location' => $jobData['location'] ?? null,
                                 ]
                             );
                             if ($app->wasRecentlyCreated) {

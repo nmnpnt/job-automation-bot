@@ -27,12 +27,22 @@
             <p class="mt-2 text-sm text-slate-400 font-bold max-w-2xl">Manage, filter, and review all your gathered job opportunities in one place.</p>
         </div>
 
-        <div class="flex items-center gap-3">
-            <!-- Export Button -->
-            <button wire:click="exportCSV" wire:loading.attr="disabled" class="h-11 inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md px-6 rounded-xl text-sm font-bold text-white border border-white/20 hover:bg-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-105 transition-all shadow-lg disabled:opacity-50 group">
-                <svg wire:loading.remove wire:target="exportCSV" class="w-4 h-4 text-white group-hover:text-neon-cyan transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                <svg wire:loading wire:target="exportCSV" class="animate-spin w-4 h-4 text-neon-cyan" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                <span>Export CSV</span>
+        <div class="flex items-center gap-2">
+            <!-- Export Buttons -->
+            <button wire:click="exportCSV" wire:loading.attr="disabled" class="h-11 inline-flex items-center justify-center gap-1.5 bg-white/10 backdrop-blur-md px-4 rounded-xl text-xs font-bold text-white border border-white/20 hover:bg-white/20 hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-105 transition-all shadow-lg disabled:opacity-50 group">
+                <svg wire:loading.remove wire:target="exportCSV" class="w-3.5 h-3.5 text-white group-hover:text-neon-cyan transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <svg wire:loading wire:target="exportCSV" class="animate-spin w-3.5 h-3.5 text-neon-cyan" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span>CSV</span>
+            </button>
+            <button wire:click="exportExcel" wire:loading.attr="disabled" class="h-11 inline-flex items-center justify-center gap-1.5 bg-brand-500/20 backdrop-blur-md px-4 rounded-xl text-xs font-bold text-brand-300 border border-brand-500/30 hover:bg-brand-500/30 hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:scale-105 transition-all shadow-lg disabled:opacity-50 group">
+                <svg wire:loading.remove wire:target="exportExcel" class="w-3.5 h-3.5 text-brand-300 group-hover:text-brand-200 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <svg wire:loading wire:target="exportExcel" class="animate-spin w-3.5 h-3.5 text-brand-200" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span>Excel</span>
+            </button>
+            <button wire:click="exportPDF" wire:loading.attr="disabled" class="h-11 inline-flex items-center justify-center gap-1.5 bg-rose-500/20 backdrop-blur-md px-4 rounded-xl text-xs font-bold text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 hover:shadow-[0_0_15px_rgba(244,63,94,0.3)] hover:scale-105 transition-all shadow-lg disabled:opacity-50 group">
+                <svg wire:loading.remove wire:target="exportPDF" class="w-3.5 h-3.5 text-rose-300 group-hover:text-rose-200 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <svg wire:loading wire:target="exportPDF" class="animate-spin w-3.5 h-3.5 text-rose-200" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span>PDF</span>
             </button>
         </div>
     </div>
@@ -247,6 +257,13 @@
                                 <svg class="w-4 h-4 {{ $job->is_saved ? 'fill-current' : 'fill-none' }}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
                             </button>
                             
+                            @if($job->original_job_url)
+                            <a href="{{ $job->original_job_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand-500/10 border border-brand-500/30 text-brand-300 hover:bg-brand-500/20 hover:border-brand-500/50 hover:shadow-[0_0_15px_rgba(139,92,246,0.4)] font-black uppercase tracking-wider text-[10px] transition-all" title="Go to Original Job Posting">
+                                Apply link
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            </a>
+                            @endif
+
                             <a href="{{ route('jobs.show', $job->id) }}" wire:navigate class="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-neon-cyan/10 border border-neon-cyan/30 text-neon-cyan hover:bg-neon-cyan/20 hover:border-neon-cyan/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.4)] font-black uppercase tracking-wider text-[10px] transition-all">
                                 View Details
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>

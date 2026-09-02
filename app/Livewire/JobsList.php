@@ -7,6 +7,9 @@ use Livewire\WithPagination;
 use Livewire\Attributes\On;
 use App\Models\Application;
 use App\Enums\ApplicationSource;
+use App\Exports\JobsExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class JobsList extends Component
 {
@@ -44,10 +47,9 @@ class JobsList extends Component
         }
     }
 
-    public function exportCSV()
+    private function getFilteredQuery()
     {
         $userId = auth()->id();
-        
         $query = Application::where('user_id', $userId);
 
         if ($this->search) {
@@ -66,8 +68,12 @@ class JobsList extends Component
         }
 
         $query->orderBy($this->sortField, $this->sortDirection);
+        return $query;
+    }
 
-        $jobs = $query->get();
+    public function exportCSV()
+    {
+        $jobs = $this->getFilteredQuery()->get();
 
         $csvHeader = ['Job Title', 'Company', 'Portal', 'Status', 'Applied At', 'URL'];
         
@@ -93,6 +99,21 @@ class JobsList extends Component
         ]);
     }
 
+    public function exportExcel()
+    {
+        $jobs = $this->getFilteredQuery()->get();
+        return Excel::download(new JobsExport($jobs), 'jobs_export_' . date('Y-md_His') . '.xlsx');
+    }
+
+    public function exportPDF()
+    {
+        $jobs = $this->getFilteredQuery()->get();
+        $pdf = Pdf::loadView('pdf.jobs', ['jobs' => $jobs]);
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'jobs_export_' . date('Y-md_His') . '.pdf');
+    }
+
 
 
     // Removed duplicate filterStatus and updatingFilterStatus
@@ -108,27 +129,7 @@ class JobsList extends Component
     public function render()
     {
         $userId = auth()->id();
-        
-        $query = Application::where('user_id', $userId);
-
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('job_title', 'like', '%' . $this->search . '%')
-                  ->orWhere('company_name', 'like', '%' . $this->search . '%');
-            });
-        }
-
-        if ($this->filterSource) {
-            $query->where('application_source', $this->filterSource);
-        }
-
-        if ($this->filterStatus) {
-            $query->where('status', $this->filterStatus);
-        }
-
-        $query->orderBy($this->sortField, $this->sortDirection);
-
-        $jobs = $query->paginate(20);
+        $jobs = $this->getFilteredQuery()->paginate(20);
 
         // Define the specific job portals requested by the user
         $curatedSources = [

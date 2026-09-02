@@ -80,7 +80,7 @@ function slugify(text) {
         ? target_locations.split(',').map(l => l.trim()).filter(Boolean)
         : [];
 
-    const searchQueries = [];
+    let searchQueries = [];
     roles.forEach(role => {
         if (remote_preference === 'only') {
             searchQueries.push({ role, location: 'Remote' });
@@ -95,6 +95,14 @@ function slugify(text) {
             }
         }
     });
+
+    const pagedSearchQueries = [];
+    searchQueries.forEach(query => {
+        for (let page = 1; page <= 5; page++) {
+            pagedSearchQueries.push({ ...query, page });
+        }
+    });
+    searchQueries = pagedSearchQueries;
 
     let allJobs = [];
 
@@ -157,7 +165,9 @@ function slugify(text) {
                     const cookieFile = path.join(session_dir, 'cookies.json');
                     if (fs.existsSync(cookieFile)) {
                         try {
-                            const cookies = JSON.parse(fs.readFileSync(cookieFile, 'utf8'));
+                            const cookies = JSON.parse(
+                                fs.readFileSync(cookieFile, 'utf8').replace(/^\uFEFF/, '')
+                            );
                             const cleanCookies = cookies.map(cookie => {
                                 const { name, value, domain, path: p, secure, httpOnly, sameSite } = cookie;
                                 const valid = { name, value, domain, path: p, secure, httpOnly };
@@ -170,8 +180,9 @@ function slugify(text) {
                                 return valid;
                             });
                             await page.setCookie(...cleanCookies);
+                            console.error(`[DEBUG] Naukri cookies loaded: ${cleanCookies.length}`);
                         } catch (e) {
-                            console.error(`[DEBUG] Cookie load error: ${e.message}`);
+                            console.error(`[ERROR] Naukri cookie load failed: file="${cookieFile}", ${e.name}: ${e.message}`);
                         }
                     }
                 }
@@ -189,6 +200,9 @@ function slugify(text) {
             }
             if (['1', '7', '14', '30'].includes(String(max_job_age_days))) {
                 searchUrl += `?jobAge=${max_job_age_days}`;
+            }
+            if (query.page > 1) {
+                searchUrl += `${searchUrl.includes('?') ? '&' : '?'}page=${query.page}`;
             }
 
             try {
@@ -242,13 +256,19 @@ function slugify(text) {
                     console.error(`[DEBUG] Failed to evaluate jobs: ${e.message}`);
                 }
 
-                console.error(`[DEBUG] Page title: ${jobs.pageTitle}, Nodes found: ${jobs.nodeCount}`);
+                console.error(`[DEBUG] Page title: ${jobs.pageTitle}, URL: ${page.url()}, Nodes found: ${jobs.nodeCount}, Jobs extracted: ${jobs.extracted.length}`);
 
                 if (jobs.nodeCount === 0 && session_dir) {
                     try {
                         await page.screenshot({ path: path.join(session_dir, `naukri_empty_${Date.now()}.png`), fullPage: false });
                         console.error(`[DEBUG] Saved empty-result screenshot to session_dir`);
                     } catch (e) {}
+                }
+                if (jobs.nodeCount === 0) {
+                    const bodyPreview = await page.evaluate(() => document.body?.innerText?.slice(0, 300) || '');
+                    console.error(`[ERROR] Naukri returned zero job-card nodes: finalUrl="${page.url()}", title="${jobs.pageTitle}", bodyPreview="${bodyPreview.replace(/\s+/g, ' ')}"`);
+                } else if (jobs.extracted.length === 0) {
+                    console.error(`[ERROR] Naukri found ${jobs.nodeCount} card nodes but extracted zero jobs; selectors or card links may have changed.`);
                 }
 
                 jobs.extracted.forEach(j => { j.query_keyword = query.role; });
