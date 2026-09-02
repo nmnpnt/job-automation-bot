@@ -15,7 +15,7 @@ class JobsExport implements FromCollection, WithHeadings, WithMapping
         $this->jobs = $jobs;
     }
 
-    public function collection()
+    public function collection(): \Illuminate\Support\Collection
     {
         return $this->jobs;
     }

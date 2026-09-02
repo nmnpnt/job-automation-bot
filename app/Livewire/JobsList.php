@@ -107,8 +107,8 @@ class JobsList extends Component
 
     public function exportPDF()
     {
-        set_time_limit(300); // 5 minutes to prevent timeout
-        ini_set('memory_limit', '512M'); // Increase memory limit for dompdf
+        set_time_limit(0); // Unlimited time to prevent timeout for large datasets
+        ini_set('memory_limit', '-1'); // Unlimited memory limit for dompdf
         
         $jobs = $this->getFilteredQuery()->get();
         $pdf = Pdf::loadView('pdf.jobs', ['jobs' => $jobs]);
