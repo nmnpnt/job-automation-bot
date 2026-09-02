@@ -13,6 +13,202 @@ try:
 except ImportError:
     _CURL_CFFI_AVAILABLE = False
 
+MAX_JOBS_PER_QUERY = 100
+
+async def scrape_naukri_with_browser(search_queries, session_dir, max_job_age_days):
+    jobs = []
+    playwright = await async_playwright().start()
+    browser = None
+
+    try:
+        browser = await playwright.chromium.launch(
+            headless=True,
+            args=[
+                '--headless=new',
+                '--disable-blink-features=AutomationControlled',
+                '--no-sandbox',
+                '--disable-dev-shm-usage',
+            ],
+        )
+        context = await browser.new_context(
+            user_agent=(
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/120.0.0.0 Safari/537.36'
+            )
+        )
+
+        cookie_file = (
+            os.path.normpath(os.path.join(session_dir, 'cookies.json'))
+            if session_dir else None
+        )
+        if cookie_file and os.path.exists(cookie_file):
+            try:
+                with open(cookie_file, 'r', encoding='utf-8-sig') as f:
+                    raw_cookies = json.load(f)
+                clean_cookies = []
+                for cookie in raw_cookies:
+                    if not cookie.get('name') or not cookie.get('value'):
+                        continue
+                    item = {
+                        'name': cookie['name'],
+                        'value': cookie['value'],
+                        'domain': cookie.get('domain', '.naukri.com'),
+                        'path': cookie.get('path', '/'),
+                    }
+                    if cookie.get('expirationDate'):
+                        item['expires'] = cookie['expirationDate']
+                    if 'secure' in cookie:
+                        item['secure'] = cookie['secure']
+                    if 'httpOnly' in cookie:
+                        item['httpOnly'] = cookie['httpOnly']
+                    clean_cookies.append(item)
+                if clean_cookies:
+                    await context.add_cookies(clean_cookies)
+                print(
+                    f'[DEBUG] Naukri browser cookies loaded: {len(clean_cookies)}',
+                    file=sys.stderr,
+                )
+            except Exception as error:
+                print(f'[DEBUG] Naukri browser cookie error: {error}', file=sys.stderr)
+        elif cookie_file:
+            print(f'[DEBUG] Naukri browser cookie file not found: {cookie_file}', file=sys.stderr)
+
+        for query in search_queries:
+            page = await context.new_page()
+            try:
+                from playwright_stealth import Stealth
+                await Stealth().apply_stealth_async(page)
+            except ImportError:
+                pass
+            role = query['role']
+            location = query['location']
+            role_slug = role.lower().replace(' ', '-')
+            location_slug = location.lower().replace(' ', '-')
+            if location and location.lower() not in ('remote', 'india'):
+                url = f'https://www.naukri.com/{role_slug}-jobs-in-{location_slug}'
+            else:
+                url = f'https://www.naukri.com/{role_slug}-jobs'
+            if str(max_job_age_days) in ('1', '7', '14', '30'):
+                url += f'?jobAge={max_job_age_days}'
+
+            try:
+                print(f'[DEBUG] Naukri (Playwright): {url}', file=sys.stderr)
+                await page.goto(url, wait_until='domcontentloaded', timeout=60000)
+                await page.wait_for_timeout(3000)
+                for _ in range(3):
+                    await page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+                    await page.wait_for_timeout(2000)
+
+                extracted = await page.evaluate('''() => {
+                    const nodes = document.querySelectorAll(
+                        '.srp-jobtuple-wrapper, article.jobTuple, .jobTuple'
+                    );
+                    return Array.from(nodes).map(node => {
+                        const titleNode = node.querySelector(
+                            'a.title, .title a, a[href*="/job-listings-"]'
+                        );
+                        const companyNode = node.querySelector(
+                            'a.comp-name, .comp-name, .companyInfo a, span.comp-name'
+                        );
+                        const locationNode = node.querySelector(
+                            '.locWdth, .loc-wdth, span.locWdth, [class*="loc"]'
+                        );
+                        return {
+                            url: titleNode ? titleNode.href : '',
+                            title: titleNode ? (titleNode.innerText.trim() || titleNode.getAttribute('title') || '') : '',
+                            company: companyNode ? companyNode.innerText.trim() : '',
+                            location: locationNode ? locationNode.innerText.trim() : ''
+                        };
+                    }).filter(job => job.url);
+                }''')
+
+                for job in extracted:
+                    job['url'] = job['url'].split('?')[0]
+                    job['title'] = job['title'] or 'Unknown'
+                    job['company'] = job['company'] or 'Unknown'
+                    job['location'] = job['location'] or location or 'Unknown'
+                    job['query_keyword'] = role
+                    jobs.append(job)
+                print(
+                    f'[DEBUG] Naukri page nodes/jobs: {len(extracted)}',
+                    file=sys.stderr,
+                )
+                if not extracted:
+                    page_title = await page.title()
+                    page_text = (await page.locator('body').inner_text())[:300].replace('\n', ' ')
+                    print(
+                        f'[DEBUG] Naukri empty result details: '
+                        f'final_url={page.url}, title={page_title!r}, '
+                        f'body_preview={page_text!r}',
+                        file=sys.stderr,
+                    )
+            except Exception as error:
+                print(
+                    f'[ERROR] Naukri Playwright query failed: role={role!r}, '
+                    f'location={location!r}, url={url}, error={type(error).__name__}: {error}',
+                    file=sys.stderr,
+                )
+            finally:
+                await page.close()
+    finally:
+        if browser:
+            await browser.close()
+        await playwright.stop()
+
+    return jobs
+
+async def scrape_naukri_with_puppeteer(input_data):
+    script_path = os.path.join(os.path.dirname(__file__), 'naukri_scraper.js')
+    process = await asyncio.create_subprocess_exec(
+        'node',
+        script_path,
+        json.dumps(input_data),
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    async def forward_stderr():
+        while True:
+            line = await process.stderr.readline()
+            if not line:
+                break
+            print(line.decode('utf-8', errors='replace'), file=sys.stderr, end='')
+            sys.stderr.flush()
+
+    stderr_task = asyncio.create_task(forward_stderr())
+    stdout = await process.stdout.read()
+    await process.wait()
+    await stderr_task
+    if process.returncode != 0:
+        print(
+            f'[ERROR] Naukri Puppeteer exit code: {process.returncode}',
+            file=sys.stderr,
+        )
+        raise RuntimeError(
+            f'Naukri Puppeteer scraper exited with code {process.returncode}'
+        )
+    output = stdout.decode('utf-8', errors='replace').strip().splitlines()
+    if not output:
+        print('[ERROR] Naukri Puppeteer returned empty stdout', file=sys.stderr)
+        raise RuntimeError('Naukri Puppeteer scraper returned no output')
+    try:
+        result = json.loads(output[-1])
+    except json.JSONDecodeError as error:
+        print(
+            f'[ERROR] Naukri Puppeteer returned invalid JSON: {error}; '
+            f'last_output={output[-1][:500]!r}',
+            file=sys.stderr,
+        )
+        raise
+    if result.get('status') != 'success':
+        print(
+            f'[ERROR] Naukri Puppeteer reported failure: {result}',
+            file=sys.stderr,
+        )
+        raise RuntimeError(result.get('message', 'Naukri Puppeteer scraper failed'))
+    return result.get('jobs', [])
+
 async def run_scraper(input_data):
     platform = input_data.get('platform')
     session_dir = input_data.get('session_dir')
@@ -40,22 +236,531 @@ async def run_scraper(input_data):
             if remote_preference == 'include':
                 search_queries.append({'role': role, 'location': 'Remote'})
 
+    if platform in ['INDEED', 'LINKEDIN', 'CUTSHORT']:
+        paged_queries = []
+        page_size = 10 if platform == 'INDEED' else 25
+        for query in search_queries:
+            for offset in range(0, MAX_JOBS_PER_QUERY, page_size):
+                if platform == 'CUTSHORT':
+                    paged_queries.append({**query, 'page': (offset // page_size) + 1})
+                else:
+                    paged_queries.append({**query, 'start': offset})
+        search_queries = paged_queries
+
     all_jobs = []
 
-    if platform in ['UNSTOP', 'CUTSHORT', 'HIRIST']:
+    if platform == 'NAUKRI':
+        print(
+            '[DEBUG] Naukri scraper: using Puppeteer directly',
+            file=sys.stderr,
+        )
+        all_jobs.extend(await scrape_naukri_with_puppeteer(input_data))
+    elif platform in ['UNSTOP', 'CUTSHORT', 'HIRIST', 'UPLERS']:
         import httpx
         from bs4 import BeautifulSoup
         async with httpx.AsyncClient(timeout=15.0) as client:
             for query in search_queries:
                 keyword = query['role']
                 loc = query['location']
+                page_number = query.get('page', 1)
                 try:
+                    if platform == 'UPLERS':
+                        # Uplers is a React SPA. Do not scrape the rendered DOM.
+                        # The Talent page loads jobs from the authenticated API:
+                        # /api/talent/hr/opportunities
+                        #
+                        # IMPORTANT: Keep the existing all_jobs schema unchanged.
+                        # Only title/company/location/url/description/query_keyword
+                        # are passed downstream to the existing DB pipeline.
+
+                        cookie_file = (
+                            os.path.normpath(
+                                os.path.join(session_dir, 'cookies.json')
+                            )
+                            if session_dir else None
+                        )
+
+                        uplers_cookies = {}
+
+                        if cookie_file and os.path.exists(cookie_file):
+                            try:
+                                with open(
+                                    cookie_file,
+                                    'r',
+                                    encoding='utf-8-sig'
+                                ) as f:
+                                    raw_cookies = json.load(f)
+
+                                for c in raw_cookies:
+                                    domain = str(c.get('domain', '') or '')
+                                    name = c.get('name')
+                                    value = c.get('value')
+
+                                    if (
+                                        name
+                                        and value is not None
+                                        and (
+                                            'uplers.com' in domain
+                                            or domain == ''
+                                        )
+                                    ):
+                                        uplers_cookies[name] = value
+
+                                print(
+                                    f"[DEBUG] Uplers cookies loaded: "
+                                    f"{len(uplers_cookies)}",
+                                    file=sys.stderr
+                                )
+
+                            except Exception as e:
+                                print(
+                                    f"[DEBUG] Uplers cookie load error: {e}",
+                                    file=sys.stderr
+                                )
+                        else:
+                            print(
+                                f"[DEBUG] Uplers cookies file not found: "
+                                f"{cookie_file}",
+                                file=sys.stderr
+                            )
+
+                        # -------------------------------------------------
+                        # UPLERS AUTH DEBUG + AUTO TOKEN CAPTURE
+                        # -------------------------------------------------
+                        # We keep the existing scraper architecture intact.
+                        # This temporary block opens the authenticated Uplers
+                        # page, prints ONLY storage key names, and captures
+                        # Authorization/X-XSRF headers from the browser request.
+                        browser_auth = {
+                            'authorization': '',
+                            'xsrf': '',
+                        }
+
+                        try:
+                            print(
+                                "[DEBUG] Starting Uplers browser auth inspection...",
+                                file=sys.stderr
+                            )
+
+                            auth_pw = await async_playwright().start()
+
+                            auth_browser = await auth_pw.chromium.launch(
+                                headless=True,
+                                args=[
+                                    '--headless=new',
+                                    '--disable-blink-features=AutomationControlled',
+                                    '--no-sandbox',
+                                    '--disable-dev-shm-usage',
+                                ]
+                            )
+
+                            auth_context = await auth_browser.new_context(
+                                user_agent=(
+                                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                                    'AppleWebKit/537.36 (KHTML, like Gecko) '
+                                    'Chrome/151.0.0.0 Safari/537.36'
+                                )
+                            )
+
+                            if cookie_file and os.path.exists(cookie_file):
+                                try:
+                                    with open(
+                                        cookie_file,
+                                        'r',
+                                        encoding='utf-8-sig'
+                                    ) as f:
+                                        browser_cookie_list = json.load(f)
+
+                                    clean_browser_cookies = []
+
+                                    for c in browser_cookie_list:
+                                        if not c.get('name') or not c.get('value'):
+                                            continue
+
+                                        item = {
+                                            'name': c['name'],
+                                            'value': c['value'],
+                                            'domain': c.get('domain', 'platform.uplers.com'),
+                                            'path': c.get('path', '/'),
+                                        }
+
+                                        if 'expirationDate' in c:
+                                            item['expires'] = c['expirationDate']
+
+                                        if 'secure' in c:
+                                            item['secure'] = c['secure']
+
+                                        if 'httpOnly' in c:
+                                            item['httpOnly'] = c['httpOnly']
+
+                                        clean_browser_cookies.append(item)
+
+                                    if clean_browser_cookies:
+                                        await auth_context.add_cookies(
+                                            clean_browser_cookies
+                                        )
+
+                                except Exception as cookie_err:
+                                    print(
+                                        f"[DEBUG] Browser cookie load error: {cookie_err}",
+                                        file=sys.stderr
+                                    )
+
+                            auth_page = await auth_context.new_page()
+
+                            def capture_uplers_request(request):
+                                try:
+                                    if '/api/talent/hr/opportunities' not in request.url:
+                                        return
+
+                                    req_headers = request.headers
+
+                                    auth_value = (
+                                        req_headers.get('authorization')
+                                        or req_headers.get('Authorization')
+                                        or ''
+                                    )
+
+                                    xsrf_value = (
+                                        req_headers.get('x-xsrf-token')
+                                        or req_headers.get('X-XSRF-TOKEN')
+                                        or ''
+                                    )
+
+                                    if auth_value:
+                                        browser_auth['authorization'] = auth_value
+
+                                    if xsrf_value:
+                                        browser_auth['xsrf'] = xsrf_value
+
+                                except Exception:
+                                    pass
+
+                            auth_page.on("request", capture_uplers_request)
+
+                            await auth_page.goto(
+                                "https://platform.uplers.com/talent/all-opportunities",
+                                wait_until="domcontentloaded",
+                                timeout=60000
+                            )
+
+                            await auth_page.wait_for_timeout(5000)
+
+                            current_url = auth_page.url
+
+                            print(
+                                f"[DEBUG] Uplers browser final URL: {current_url}",
+                                file=sys.stderr
+                            )
+
+                            local_keys = await auth_page.evaluate(
+                                """() => Object.keys(localStorage)"""
+                            )
+
+                            session_keys = await auth_page.evaluate(
+                                """() => Object.keys(sessionStorage)"""
+                            )
+
+                            print(
+                                "[DEBUG] Uplers localStorage keys: "
+                                + ", ".join(local_keys),
+                                file=sys.stderr
+                            )
+
+                            print(
+                                "[DEBUG] Uplers sessionStorage keys: "
+                                + ", ".join(session_keys),
+                                file=sys.stderr
+                            )
+
+                            if browser_auth['authorization']:
+                                print(
+                                    "[DEBUG] Uplers Authorization captured from browser: YES",
+                                    file=sys.stderr
+                                )
+                            else:
+                                print(
+                                    "[DEBUG] Uplers Authorization captured from browser: NO",
+                                    file=sys.stderr
+                                )
+
+                            if browser_auth['xsrf']:
+                                print(
+                                    "[DEBUG] Uplers X-XSRF-TOKEN captured from browser: YES",
+                                    file=sys.stderr
+                                )
+                            else:
+                                print(
+                                    "[DEBUG] Uplers X-XSRF-TOKEN captured from browser: NO",
+                                    file=sys.stderr
+                                )
+
+                            browser_context_cookies = await auth_context.cookies(
+                                "https://platform.uplers.com"
+                            )
+
+                            for c in browser_context_cookies:
+                                if c.get('name') and c.get('value'):
+                                    uplers_cookies[c['name']] = c['value']
+
+                        except Exception as auth_error:
+                            print(
+                                f"[DEBUG] Uplers browser auth inspection error: {auth_error}",
+                                file=sys.stderr
+                            )
+
+                        finally:
+                            try:
+                                await auth_context.close()
+                            except Exception:
+                                pass
+
+                            try:
+                                await auth_browser.close()
+                            except Exception:
+                                pass
+
+                            try:
+                                await auth_pw.stop()
+                            except Exception:
+                                pass
+
+                        uplers_headers = {
+                            'User-Agent': (
+                                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                                'Chrome/120.0.0.0 Safari/537.36'
+                            ),
+                            'Accept': (
+                                'application/json, text/plain, */*'
+                            ),
+                            'Accept-Language': 'en-IN,en;q=0.9',
+                            'Referer': (
+                                'https://platform.uplers.com/'
+                                'talent/all-opportunities'
+                            ),
+                            'Origin': 'https://platform.uplers.com',
+                        }
+
+                        if browser_auth.get('authorization'):
+                            uplers_headers['Authorization'] = (
+                                browser_auth['authorization']
+                            )
+
+                        if browser_auth.get('xsrf'):
+                            uplers_headers['X-XSRF-TOKEN'] = (
+                                browser_auth['xsrf']
+                            )
+
+                        api_url = (
+                            'https://platform.uplers.com/'
+                            'api/talent/hr/opportunities'
+                        )
+
+                        # These are the filters represented by the Uplers UI.
+                        params = {
+                            'pagination': 10,
+                            'page': 1,
+                            'is_count': 0,
+                            'search': keyword,
+                            'locations': loc,
+                            'engagements': 'Remote,Hybrid,Onsite',
+                            'partner_companies': 1,
+                        }
+
+                        age = str(max_job_age_days)
+                        if age == '1':
+                            params['job_posted_date'] = '1day'
+                        elif age == '7':
+                            params['job_posted_date'] = '7days'
+                        elif age == '14':
+                            params['job_posted_date'] = '14days'
+                        elif age == '30':
+                            params['job_posted_date'] = '30days'
+
+                        page = 1
+                        max_pages = 20
+
+                        async with httpx.AsyncClient(
+                            timeout=30,
+                            cookies=uplers_cookies,
+                            follow_redirects=True,
+                        ) as uplers_client:
+
+                            while page <= max_pages:
+                                params['page'] = page
+
+                                try:
+                                    print(
+                                        f"[DEBUG] Uplers API request "
+                                        f"page={page}: {api_url}",
+                                        file=sys.stderr
+                                    )
+
+                                    res = await uplers_client.get(
+                                        api_url,
+                                        params=params,
+                                        headers=uplers_headers,
+                                    )
+
+                                    print(
+                                        f"[DEBUG] Uplers API status: "
+                                        f"{res.status_code} "
+                                        f"final_url={res.url}",
+                                        file=sys.stderr
+                                    )
+
+                                    if res.status_code != 200:
+                                        print(
+                                            f"[DEBUG] Uplers API response: "
+                                            f"{res.text[:1000]}",
+                                            file=sys.stderr
+                                        )
+                                        break
+
+                                    try:
+                                        data = res.json()
+                                    except Exception as e:
+                                        print(
+                                            f"[DEBUG] Uplers invalid JSON: "
+                                            f"{e}",
+                                            file=sys.stderr
+                                        )
+                                        break
+
+                                    hrs = data.get('hrs', {})
+
+                                    if not isinstance(hrs, dict):
+                                        print(
+                                            "[DEBUG] Uplers API response "
+                                            "does not contain a valid 'hrs' object",
+                                            file=sys.stderr
+                                        )
+                                        break
+
+                                    jobs_list = hrs.get('data', [])
+
+                                    if not isinstance(jobs_list, list):
+                                        print(
+                                            "[DEBUG] Uplers API 'hrs.data' "
+                                            "is not a list",
+                                            file=sys.stderr
+                                        )
+                                        break
+
+                                    print(
+                                        f"[DEBUG] Uplers API jobs on "
+                                        f"page {page}: {len(jobs_list)}",
+                                        file=sys.stderr
+                                    )
+
+                                    if not jobs_list:
+                                        break
+
+                                    for j in jobs_list:
+                                        if not isinstance(j, dict):
+                                            continue
+
+                                        # Keep the exact common fields used
+                                        # by the existing DB pipeline.
+                                        title = (
+                                            j.get('RequestForTalent')
+                                            or ''
+                                        ).strip()
+
+                                        company_data = j.get('company') or {}
+                                        if not isinstance(company_data, dict):
+                                            company_data = {}
+
+                                        company = (
+                                            company_data.get('company_name')
+                                            or ''
+                                        ).strip()
+
+                                        description = (
+                                            j.get('JobDescription')
+                                            or ''
+                                        )
+
+                                        city = (
+                                            j.get('city')
+                                            or ''
+                                        ).strip()
+
+                                        mode = (
+                                            j.get('ModeOfWork')
+                                            or ''
+                                        ).strip()
+
+                                        if city and mode:
+                                            location = f'{city} ({mode})'
+                                        elif city:
+                                            location = city
+                                        else:
+                                            location = mode
+
+                                        hr_number = (
+                                            j.get('HR_Number')
+                                            or ''
+                                        ).strip()
+
+                                        job_url = ''
+                                        if hr_number:
+                                            job_url = (
+                                                'https://platform.uplers.com/'
+                                                'talent/all-opportunities'
+                                                f'?activeJob={hr_number}'
+                                            )
+
+                                        if title and job_url:
+                                            all_jobs.append({
+                                                'title': title,
+                                                'company': company,
+                                                'location': location,
+                                                'url': job_url,
+                                                'description': description,
+                                                'query_keyword': keyword,
+                                            })
+
+                                    current_page = hrs.get(
+                                        'current_page',
+                                        page
+                                    )
+                                    last_page = hrs.get('last_page')
+                                    next_page_url = hrs.get('next_page_url')
+
+                                    if (
+                                        last_page is not None
+                                        and current_page >= last_page
+                                    ):
+                                        break
+
+                                    if (
+                                        not next_page_url
+                                        and len(jobs_list) < 10
+                                    ):
+                                        break
+
+                                    page += 1
+
+                                except Exception as e:
+                                    print(
+                                        f"[DEBUG] Uplers API page {page} "
+                                        f"error: {e}",
+                                        file=sys.stderr
+                                    )
+                                    break
                     if platform == 'UNSTOP':
-                        url = f"https://unstop.com/api/public/opportunity/search-result?opportunity=jobs&page=1&per_page=15&searchTerm={keyword}"
-                        res = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
-                        if res.status_code == 200:
+                        for page_number in range(1, (MAX_JOBS_PER_QUERY // 15) + 1):
+                            url = f"https://unstop.com/api/public/opportunity/search-result?opportunity=jobs&page={page_number}&per_page=15&searchTerm={keyword}"
+                            res = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+                            if res.status_code != 200:
+                                print(f"[DEBUG] Unstop HTTP {res.status_code} page={page_number}", file=sys.stderr)
+                                break
                             data = res.json()
                             jobs_data = data.get('data', {}).get('data', [])
+                            if not jobs_data:
+                                break
                             for j in jobs_data:
                                 title = j.get('title', '')
                                 company = j.get('organisation', {}).get('name', '')
@@ -64,8 +769,10 @@ async def run_scraper(input_data):
                                 location = 'Remote' if j.get('region') == 'online' else (j.get('job_location', '') or '')
                                 if title and job_url:
                                     all_jobs.append({'title': title, 'company': company, 'location': location, 'url': job_url, 'description': desc, 'query_keyword': keyword})
+                            if len(jobs_data) < 15:
+                                break
                     elif platform == 'CUTSHORT':
-                        url = f"https://cutshort.io/jobs?q={keyword}"
+                        url = f"https://cutshort.io/jobs?q={keyword}&page={page_number}"
                         res = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
                         if res.status_code == 200:
                             soup = BeautifulSoup(res.text, 'html.parser')
@@ -87,11 +794,16 @@ async def run_scraper(input_data):
                                             if title and job_url:
                                                 all_jobs.append({'title': title, 'company': company, 'location': location, 'url': job_url, 'description': desc, 'query_keyword': keyword})
                     elif platform == 'HIRIST':
-                        url = f"https://gladiator.hirist.tech/job/search?query={keyword}&page=0&posting=0&industry=&size=20"
-                        res = await client.get(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
-                        if res.status_code == 200:
+                        for page_number in range(0, (MAX_JOBS_PER_QUERY // 20) + 1):
+                            url = f"https://gladiator.hirist.tech/job/search?query={keyword}&page={page_number}&posting=0&industry=&size=20"
+                            res = await client.get(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
+                            if res.status_code != 200:
+                                print(f"[DEBUG] Hirist HTTP {res.status_code} page={page_number}", file=sys.stderr)
+                                break
                             data = res.json()
                             jobs_list = data.get('data', [])
+                            if not jobs_list:
+                                break
                             for j in jobs_list:
                                 title = j.get('title', '')
                                 company = j.get('companyName', '')
@@ -102,6 +814,8 @@ async def run_scraper(input_data):
                                 desc = ''
                                 if title:
                                     all_jobs.append({'title': title, 'company': company, 'location': location, 'url': job_url, 'description': desc, 'query_keyword': keyword})
+                            if len(jobs_list) < 20:
+                                break
                 except Exception as e:
                     print(f"[DEBUG] Failed HTTP fetch for {platform}: {e}", file=sys.stderr)
     elif platform == 'NAUKRI':
@@ -247,13 +961,14 @@ async def run_scraper(input_data):
 
             keyword = query['role']
             loc = query['location']
+            start = query.get('start', 0)
 
             search_url = ''
             job_selector = ''
 
             if platform == 'INDEED':
                 # Use Indian subdomain so geo-targeting returns Indian jobs (www.indeed.com returns US results)
-                search_url = f"https://in.indeed.com/jobs?q={keyword}&l={loc}"
+                search_url = f"https://in.indeed.com/jobs?q={keyword}&l={loc}&start={start}"
                 job_selector = '.job_seen_beacon'
             elif platform == 'LINKEDIN':
                 time_filter = ''
@@ -265,7 +980,7 @@ async def run_scraper(input_data):
                     time_filter = '&f_TPR=r2592000'
 
                 remote_param = '&f_WT=2' if remote_preference == 'only' or loc == 'Remote' else ''
-                search_url = f"https://www.linkedin.com/jobs/search/?keywords={keyword}&location={loc}{remote_param}{time_filter}"
+                search_url = f"https://www.linkedin.com/jobs/search/?keywords={keyword}&location={loc}{remote_param}{time_filter}&start={start}"
                 job_selector = '.job-search-card, .base-card'
             elif platform == 'UPLERS':
                 # Uplers talent portal requires authentication.
@@ -381,6 +1096,8 @@ async def run_scraper(input_data):
                 print(f"[DEBUG] Page title: {jobs['pageTitle']}, Nodes found: {jobs['nodeCount']}", file=sys.stderr)
 
                 for j in jobs['extracted']:
+                    if not j.get('location') or j['location'].lower() == 'unknown':
+                        j['location'] = loc or 'Unknown'
                     j['query_keyword'] = keyword
                 all_jobs.extend(jobs['extracted'])
 
@@ -462,7 +1179,7 @@ async def run_scraper(input_data):
                     except Exception as e:
                         print(f"[DEBUG] Failed to fetch desc via HTTP for {job['url']}: {e}", file=sys.stderr)
                         
-                if platform in ['UNSTOP', 'CUTSHORT', 'HIRIST', 'LINKEDIN']:
+                if platform in ['UNSTOP', 'CUTSHORT', 'HIRIST', 'LINKEDIN', 'NAUKRI', 'UPLERS']:
                     return
 
                 # Fallback to Playwright for non-LinkedIn or if HTTP failed
@@ -559,7 +1276,16 @@ async def run_scraper(input_data):
         keyword = job.get('query_keyword', '')
         keyword_lower = keyword.lower()
         core_keywords = [w for w in keyword_lower.split() if w not in common_words]
-    
+        
+        expanded_keywords = []
+        for kw in core_keywords:
+            expanded_keywords.append(kw)
+            if kw.endswith('.js'):
+                expanded_keywords.append(kw.replace('.js', ''))
+                expanded_keywords.append(kw.replace('.js', ' js'))
+                expanded_keywords.append(kw.replace('.js', 'js'))
+        core_keywords = expanded_keywords
+
         title_lower = job.get('title', '').lower()
         desc_lower = job.get('description', '').lower()
     
@@ -608,7 +1334,19 @@ async def run_scraper(input_data):
             else:
                 location_matched = False
                 for loc in locations:
-                    if loc.lower() in location_lower:
+                    loc_lower = loc.lower()
+                    if loc_lower in location_lower:
+                        location_matched = True
+                        break
+                    # Common Indian city aliases
+                    aliases = {
+                        'gurugram': 'gurgaon',
+                        'gurgaon': 'gurugram',
+                        'bengaluru': 'bangalore',
+                        'bangalore': 'bengaluru',
+                        'delhi': 'new delhi'
+                    }
+                    if loc_lower in aliases and aliases[loc_lower] in location_lower:
                         location_matched = True
                         break
                 if not location_matched:
@@ -622,10 +1360,10 @@ async def run_scraper(input_data):
 
         # Make keyword matching stricter to avoid fetching unrelated jobs
         title_match = keyword_lower in title_lower or any(core_kw in title_lower for core_kw in core_keywords)
-        # Require keyword to be mentioned at least 3 times in description if not in title
+        # Require keyword to be mentioned at least 1 time in description if not in title
         desc_keyword_count = sum(desc_lower.count(core_kw) for core_kw in core_keywords)
 
-        if title_match or desc_keyword_count >= 3:
+        if title_match or desc_keyword_count >= 1:
             final_jobs.append(job)
     
     if len(unique_jobs) > 0 and len(final_jobs) < len(unique_jobs):
