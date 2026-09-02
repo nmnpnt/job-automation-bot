@@ -91,7 +91,7 @@ class RunUserScraperJob implements ShouldQueue, ShouldBeUnique
                 $pythonExe = strncasecmp(PHP_OS, 'WIN', 3) == 0 ? base_path('bot/venv/Scripts/python.exe') : base_path('bot/venv/bin/python');
                 $scriptPath = base_path('bot/fetch_jobs.py');
                 $process = new \Symfony\Component\Process\Process([$pythonExe, $scriptPath, $inputData]);
-                $process->setTimeout(3600); // 1 hour max per platform to handle large batches
+                $process->setTimeout(7200); // 2 hours max per platform to handle large batches
                 
                 try {
                     $logFile = storage_path("logs/scraper-{$profile->user_id}.log");
