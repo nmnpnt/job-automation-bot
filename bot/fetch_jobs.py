@@ -13,7 +13,7 @@ try:
 except ImportError:
     _CURL_CFFI_AVAILABLE = False
 
-MAX_JOBS_PER_QUERY = 500
+MAX_JOBS_PER_QUERY = 250
 
 async def scrape_naukri_with_browser(search_queries, session_dir, max_job_age_days):
     jobs = []
@@ -1117,7 +1117,7 @@ async def run_scraper(input_data):
     print(f"[DEBUG] Found {len(unique_jobs)} unique jobs. Fetching descriptions...", file=sys.stderr)
 
     # Increase batch size for much faster concurrency now that we block heavy assets
-    BATCH_SIZE = 3
+    BATCH_SIZE = 10
     import httpx
     from bs4 import BeautifulSoup
 
